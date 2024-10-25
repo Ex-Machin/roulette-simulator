@@ -24,8 +24,9 @@ export default function Contact() {
                 message: formData.get('message')
             })
             setSuccess(true)
-
+        /* eslint-disable */
         } catch (error: any) {
+        /* eslint-disable */
             // Capture the error message to display to the user
             setError(error.message)
             console.error(error)
