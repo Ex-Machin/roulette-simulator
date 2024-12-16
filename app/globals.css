@@ -57,34 +57,79 @@ body {
 }
 
 .square {
+  position: relative;
+  width: 45px; /* Задайте ширину для наглядности */
+  height: 45px; /* Задайте высоту для наглядности */
+}
+
+.chip {
   border: 1px solid #999;
   float: left;
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
-  height: 34px;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 34px;
   color: white;
+  cursor: inherit;
+  width: 35px; /* Кнопка займет весь контейнер */
+  height: 35px;
 }
 
-.square.red {
+.chip img {
+  width: 100%;
+  height: 100%;
+}
+
+.square_button {
+  border: 1px solid #999;
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  color: white;
+  cursor: inherit;
+  width: 100%; /* Кнопка займет весь контейнер */
+  height: 100%;
+}
+
+.square img.chip_icon  {
+  position: absolute; /* Позиционирует картинку относительно родителя */
+  top: 50%; /* Сдвигает картинку вниз на 50% */
+  left: 50%; /* Сдвигает картинку вправо на 50% */
+  transform: translate(-50%, -50%); /* Центрирует картинку */
+  pointer-events: none; /* Картинка не будет блокировать клики по кнопке */
+}
+
+.square_button.wide {
+  background-color: #999;
+  width: 100%;
+}
+
+.square_button.red {
   background-color: rgb(165, 20, 20);
 }
 
-.square.red:hover {
+.square_button.red:hover {
   background-color: rgb(187, 78, 78);
 }
 
-.square.black {
+.square_button.black {
   background-color: rgb(36, 36, 36);
 }
 
-.square.black:hover {
+.square_button.black:hover {
   background-color: rgb(47, 47, 47);
+}
+
+.board-row {
+  display: flex;
 }
 
 .board-row:after {
