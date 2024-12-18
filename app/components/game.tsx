@@ -1,17 +1,18 @@
 "use client"
 
-import { MouseEventHandler, useState } from 'react';
-
+import { MouseEventHandler, useEffect, useState } from 'react';
 
 interface SquareProps {
   index: string;
   cursor: string
   onSquareClick: MouseEventHandler<HTMLButtonElement>;
+  first_bet_audio: HTMLAudioElement
+  second_bet_audio: HTMLAudioElement
 }
 
 interface BoardProps {
   squares: any;
-  setSquares: Function;
+  onPlay: Function;
   cursor: string;
   setCursor: Function;
 }
@@ -29,12 +30,17 @@ function Chip({ value, onCursorClick }: ChipProps) {
   )
 }
 
-function Square({ index, cursor, onSquareClick }: SquareProps) {
+function Square({ index, cursor, onSquareClick, first_bet_audio, second_bet_audio }: SquareProps) {
   const color = "square_button " + (Number(index) % 2 === 0 ? "black" : "red");
   const [chip, setChip] = useState<null | string>(null);
 
   const handleSquareClick = (e: any) => {
     if (cursor !== '') {
+      if (chip) {
+        second_bet_audio.play();
+      } else {
+        first_bet_audio.play();
+      }
       setChip(cursor);
       onSquareClick(e);
     }
@@ -51,12 +57,19 @@ function Square({ index, cursor, onSquareClick }: SquareProps) {
   );
 }
 
-function Board({ squares, setSquares, cursor, setCursor }: BoardProps) {
+function Board({ squares, onPlay, cursor, setCursor }: BoardProps) {
+  const first_bet_audo = new Audio('./audio/first_bet.mp3')
+  const second_bet_audio = new Audio('./audio/second_bet.mp3')
+
+  useEffect(() => {
+    console.log("squares", squares);
+  }, [])
+  
 
   function handleClick(i: number) {
-    const nextSquares = squares.slice();
-    nextSquares[i][i] += Number(cursor);
-    setSquares(nextSquares);
+    squares = squares.map((square: any) => ({ ...square }));
+    squares[i][i] += Number(cursor);
+    onPlay(squares);
   }
 
   const changeCursor = (value: string) => {
@@ -64,9 +77,6 @@ function Board({ squares, setSquares, cursor, setCursor }: BoardProps) {
       if (prevState === value) {
         return ""
       }
-
-
-
       return value;
     });
   }
@@ -78,7 +88,9 @@ function Board({ squares, setSquares, cursor, setCursor }: BoardProps) {
           key={0}
           index="0"
           cursor={cursor}
-          onSquareClick={(e) => handleClick(0)}
+          onSquareClick={() => handleClick(0)}
+          first_bet_audio={first_bet_audo}
+          second_bet_audio={second_bet_audio}
         />
       </div>
       {Array.from({ length: 12 }, (_, rowIndex) => (
@@ -90,7 +102,9 @@ function Board({ squares, setSquares, cursor, setCursor }: BoardProps) {
                 key={index}
                 index={index.toString()}
                 cursor={cursor}
-                onSquareClick={(e) => handleClick(index)}
+                onSquareClick={() => handleClick(index)}
+                first_bet_audio={first_bet_audo}
+                second_bet_audio={second_bet_audio}
               />
             );
           })}
@@ -107,14 +121,30 @@ function Board({ squares, setSquares, cursor, setCursor }: BoardProps) {
 
 
 export default function Game() {
-  const [squares, setSquares] = useState(Array.from({ length: 37 }, (_, i) => ({ [i.toString()]: 0 })));
   const [cursor, setCursor] = useState('');
+  const [history, setHistory] = useState([Array.from({ length: 37 }, (_, i) => ({ [i.toString()]: 0, "lastChip": null }))]);
+  let currentSquares = history[history.length - 1]
 
+
+  function handlePlay(nextSquares: { [key: string]: number }[]) {
+    const deepCopiedSquares = nextSquares.map((square: any) => ({ ...square })); 
+    setHistory([...history, deepCopiedSquares]);
+  }
+
+  function goBack() {
+    if (history.length > 1) {
+      setHistory((prevHistory) => prevHistory.slice(0, -1));
+    }
+  }
+  
 
   return (
     <div className="game" style={{ cursor: `url(./cursors/${cursor}.png), auto` }}>
       <div className="game-board">
-        <Board squares={squares} setSquares={setSquares} cursor={cursor} setCursor={setCursor} />
+        <Board squares={currentSquares} onPlay={handlePlay} cursor={cursor} setCursor={setCursor} />
+      </div>
+      <div className="game-info">
+        <button onClick={() => goBack()}>Go Back</button>
       </div>
     </div>
   );
