@@ -128,6 +128,16 @@ body {
   background-color: rgb(47, 47, 47);
 }
 
+.square_button.red.hover {
+  background-color: rgb(187, 78, 78);
+}
+
+.square_button.black.hover {
+  background-color: rgb(47, 47, 47);
+}
+
+
+
 .board-row {
   display: flex;
 }
