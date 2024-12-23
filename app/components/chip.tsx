@@ -1,4 +1,9 @@
-import { ChipProps } from "../interfaces/interfaces";
+import { MouseEventHandler } from "react";
+
+export interface ChipProps {
+    value: number;
+    onCursorClick: MouseEventHandler<HTMLButtonElement>;
+}
 
 export default function Chip({ value, onCursorClick }: ChipProps) {
     return (

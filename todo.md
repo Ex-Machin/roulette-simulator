@@ -1,1 +1,1 @@
-1. Bet
+1. Max amount of stakes

@@ -1,17 +1,24 @@
-import { BoardProps } from "../interfaces/interfaces";
-import Chip from "./chip";
-import Square from "./sqaure";
+import { MouseEventHandler } from "react";
+import Chip from "./Chip";
+import Square from "./Sqaure";
 
-export default function Board({ squares, onPlay, setCursor }: BoardProps) {
+
+export interface BoardProps {
+    squares: any;
+    hovered: boolean[];
+    onPlay: Function;
+    setCursor: Function;
+    highlightedCombination: number[]
+    onMouseLeave: MouseEventHandler<HTMLButtonElement>;
+    onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
+}
+
+
+export default function Board({ squares, hovered, onPlay, setCursor, highlightedCombination, onMouseMove, onMouseLeave }: BoardProps) {
 
     const changeCursor = (value: string) => {
-        setCursor((prevState: string) => {
-            if (prevState === value) {
-                return ""
-            }
-            return value;
-        });
-    }
+        setCursor((prevState: string) => (prevState === value ? "" : value));
+    };
 
     return (
         <>
@@ -19,10 +26,14 @@ export default function Board({ squares, onPlay, setCursor }: BoardProps) {
                 <Square
                     key={0}
                     index="0"
-                    color={squares[0].color}
-                    hover={squares[0].hover}
+                    color={
+                        highlightedCombination.includes(0) ? "highlighted" : squares[0].color
+                    }
+                    hover={hovered[0]}
                     chip={squares[0].lastChip}
                     onSquareClick={() => onPlay(0)}
+                    onMouseMove={onMouseMove}
+                    onMouseLeave={onMouseLeave}
                 />
             </div>
             {Array.from({ length: 12 }, (_, rowIndex) => (
@@ -33,10 +44,14 @@ export default function Board({ squares, onPlay, setCursor }: BoardProps) {
                             <Square
                                 key={index}
                                 index={index.toString()}
-                                color={squares[index].color}
-                                hover={squares[index].hover}
+                                color={
+                                    highlightedCombination.includes(index) ? "highlighted" : squares[index].color
+                                }
+                                hover={hovered[index]}
                                 chip={squares[index].lastChip}
                                 onSquareClick={() => onPlay(index)}
+                                onMouseMove={onMouseMove}
+                                onMouseLeave={onMouseLeave}
                             />
                         );
                     })}

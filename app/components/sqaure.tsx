@@ -1,11 +1,30 @@
-import { SquareProps } from "../interfaces/interfaces";
+import { MouseEventHandler } from "react";
 
-export default function Square({ index, color, hover, chip, onSquareClick, }: SquareProps) {
+export interface SquareProps {
+    index: string;
+    color: string;
+    hover: boolean;
+    chip: null | string;
+    onSquareClick: MouseEventHandler<HTMLButtonElement>;
+    onMouseMove: Function;
+    onMouseLeave: MouseEventHandler<HTMLButtonElement>;
+}
+
+export default function Square({ index, color, hover, chip, onSquareClick, onMouseMove, onMouseLeave }: SquareProps) {
     const className = "square_button " + color + (hover ? " hover" : "")
 
     return (
         <div className='square'>
-            <button className={className} onClick={(i) => onSquareClick(i)}>
+            <button
+                className={className}
+                onClick={(i) => onSquareClick(i)}
+                onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const relativeX = e.clientX - rect.left;
+                    const relativeY = e.clientY - rect.top;
+                    onMouseMove(Number(index), relativeX, rect.width, relativeY, rect.height);
+                }}
+                onMouseLeave={onMouseLeave}>
                 {index}
             </button>
             {chip &&
