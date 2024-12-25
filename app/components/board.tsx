@@ -1,12 +1,13 @@
 import { MouseEventHandler } from "react";
 import Chip from "./Chip";
 import Square from "./Sqaure";
+import getRouletteColor from "../utils/functions";
 
 
 export interface BoardProps {
     squares: any;
     hovered: boolean[];
-    onPlay: Function;
+    onSquareSelect: Function;
     setCursor: Function;
     highlightedCombination: number[]
     onMouseLeave: MouseEventHandler<HTMLButtonElement>;
@@ -14,11 +15,13 @@ export interface BoardProps {
 }
 
 
-export default function Board({ squares, hovered, onPlay, setCursor, highlightedCombination, onMouseMove, onMouseLeave }: BoardProps) {
+export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave }: BoardProps) {
+    
 
     const changeCursor = (value: string) => {
         setCursor((prevState: string) => (prevState === value ? "" : value));
     };
+
 
     return (
         <>
@@ -27,13 +30,14 @@ export default function Board({ squares, hovered, onPlay, setCursor, highlighted
                     key={0}
                     index="0"
                     color={
-                        highlightedCombination.includes(0) ? "highlighted" : squares[0].color
+                        highlightedCombination.includes(0) ? "highlighted" : getRouletteColor(0)
                     }
                     hover={hovered[0]}
                     chip={squares[0].lastChip}
-                    onSquareClick={() => onPlay(0)}
+                    onSquareClick={() => onSquareSelect(0)}
                     onMouseMove={onMouseMove}
                     onMouseLeave={onMouseLeave}
+                    combinations={squares[0].combinations}
                 />
             </div>
             {Array.from({ length: 12 }, (_, rowIndex) => (
@@ -45,13 +49,14 @@ export default function Board({ squares, hovered, onPlay, setCursor, highlighted
                                 key={index}
                                 index={index.toString()}
                                 color={
-                                    highlightedCombination.includes(index) ? "highlighted" : squares[index].color
+                                    highlightedCombination.includes(index) ? "highlighted" : getRouletteColor(index)
                                 }
                                 hover={hovered[index]}
                                 chip={squares[index].lastChip}
-                                onSquareClick={() => onPlay(index)}
+                                onSquareClick={() => onSquareSelect(index)}
                                 onMouseMove={onMouseMove}
                                 onMouseLeave={onMouseLeave}
+                                combinations={squares[index].combinations}
                             />
                         );
                     })}

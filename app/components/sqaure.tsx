@@ -8,11 +8,12 @@ export interface SquareProps {
     onSquareClick: MouseEventHandler<HTMLButtonElement>;
     onMouseMove: Function;
     onMouseLeave: MouseEventHandler<HTMLButtonElement>;
+    combinations: Record<"top" | "left" | "chip", number | string>[]
 }
 
-export default function Square({ index, color, hover, chip, onSquareClick, onMouseMove, onMouseLeave }: SquareProps) {
+export default function Square({ index, color, hover, chip, onSquareClick, onMouseMove, onMouseLeave, combinations }: SquareProps) {
     const className = "square_button " + color + (hover ? " hover" : "")
-
+    
     return (
         <div className='square'>
             <button
@@ -28,8 +29,11 @@ export default function Square({ index, color, hover, chip, onSquareClick, onMou
                 {index}
             </button>
             {chip &&
-                <img src={`./cursors/${chip}.png`} alt="chip_icon" className='chip_icon' />
+                <img style={{ top: `${50}%`, left: `${50}%` }} src={`./cursors/${chip}.png`} alt="chip_icon" className='chip_icon' />
             }
+            {combinations.map((combination, i) => {
+                return <img key={i} style={{ top: `${combination.top}%`, left: `${combination.left}%` }} src={`./cursors/${combination.chip}.png`} alt="chip_icon" className='chip_icon' />
+            })}
         </div>
     );
 }
