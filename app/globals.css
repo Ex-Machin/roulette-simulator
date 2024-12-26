@@ -58,7 +58,7 @@ body {
 
 .square {
   position: relative;
-  width: 45px; /* Задайте ширину для наглядности */
+  width: 33%; /* Задайте ширину для наглядности */
   height: 45px; /* Задайте высоту для наглядности */
 }
 
@@ -86,9 +86,6 @@ body {
 
 
 .square_button {
-  /* box-sizing: border-box; 
-  padding: 0;           
-  margin: 0; */
   border: 1px solid #999;
   float: left;
   font-size: 24px;
@@ -105,11 +102,9 @@ body {
 
 .square img.chip_icon  {
   z-index: 2;
-  position: absolute; /* Позиционирует картинку относительно родителя */
-  /* top: 50%;  */
-  /* left: 50%;  */
-  transform: translate(-50%, -50%); /* Центрирует картинку */
-  pointer-events: none; /* Картинка не будет блокировать клики по кнопке */
+  position: absolute;
+  transform: translate(-50%, -50%); 
+  pointer-events: none;
 }
 
 .square_button.wide {

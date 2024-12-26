@@ -6,11 +6,13 @@ import {
   allPossibleRoulleteCombinations,
   black,
   even,
+  leftBlock,
   nineteenTo36,
   odd,
   oneTo12,
   oneTo18,
   red,
+  rightBlock,
   thirteenTo24,
   twentyfiveTo36,
 } from "../utils/ranges";
@@ -25,17 +27,14 @@ export type Square = {
 
 export default function Game() {
   const initialState: Square[][] = [Array.from({ length: 37 }, (_, i) => ({
-      bet: 0,
-      lastChip: null,
-      hover: null,
-      combinations: []
-    })),
+    bet: 0,
+    lastChip: null,
+    hover: null,
+    combinations: []
+  })),
   ];
   const first_bet_audio = new Audio("./audio/first_bet.mp3");
   const second_bet_audio = new Audio("./audio/second_bet.mp3");
-
-  const rightBlock = new Set([3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]);
-  const leftBlock = new Set([1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]);
 
   const [cursor, setCursor] = useState("");
   const [history, setHistory] = useState(initialState);
@@ -49,12 +48,12 @@ export default function Game() {
 
   function onSquareSelect(i: number) {
     if (cursor !== "") {
-      const updatedBetCombination = {...currentBetCombination};
+      const updatedBetCombination = { ...currentBetCombination };
       let updatedSquares = currentSquares.map((square) => ({ ...square }));
       const joinedCombinations = highlightedCombination.join("/");
-      
+
       if (highlightedCombination.length > 1) {
-        
+
         if (updatedBetCombination[joinedCombinations as keyof typeof allPossibleRoulleteCombinations] !== 0) {
           second_bet_audio.play();
         } else {
@@ -66,7 +65,7 @@ export default function Game() {
           ...betCombinationsHistory,
           updatedBetCombination,
         ]);
-        
+
         updatedSquares = calculatePositions(updatedSquares, cursor)
       } else {
 
@@ -93,16 +92,16 @@ export default function Game() {
     const secondHighlightedElement = Number(highlightedCombination[1]);
 
     if (highlightedCombination.includes(0)) {
-      
+
       if (highlightedCombination.length === 3) {
         const thirdElement = highlightedCombination[2]
 
-        squares[thirdElement].combinations = [...squares[thirdElement].combinations, {"top": 0, "left": 0, "chip": cursor}]
+        squares[thirdElement].combinations = [...squares[thirdElement].combinations, { "top": 0, "left": 0, "chip": cursor }]
 
       } else if (highlightedCombination.length === 2) {
-        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, {"top": 0, "left": 50, "chip": cursor}]
+        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, { "top": 0, "left": 50, "chip": cursor }]
       } else {
-        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, {"top": 0, "left": 0, "chip": cursor}]
+        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, { "top": 0, "left": 0, "chip": cursor }]
 
       }
 
@@ -112,28 +111,28 @@ export default function Game() {
     if (highlightedCombination.length === 2) {
 
       // 2 row highlithed elements 
-      if (firsHighlightedElement + 1 === highlightedCombination[1]){
-        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, {"top": 50, "left": 100, "chip": cursor}]
+      if (firsHighlightedElement + 1 === highlightedCombination[1]) {
+        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 50, "left": 100, "chip": cursor }]
       }
       // 2 columns highlighted elements
       if (firsHighlightedElement + 3 === highlightedCombination[1]) {
-        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, {"top": 100, "left": 50, "chip": cursor}]
+        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 50, "chip": cursor }]
       }
     }
 
     if (highlightedCombination.length === 3) {
 
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, {"top": 50, "left": 0, "chip": cursor}]
-      
+      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 50, "left": 0, "chip": cursor }]
+
     }
-    
+
     if (highlightedCombination.length === 4) {
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, {"top": 100, "left": 100, "chip": cursor}]
+      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 100, "chip": cursor }]
     }
-    
+
     if (highlightedCombination.length === 6) {
-      
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, {"top": 100, "left": 0, "chip": cursor}]
+
+      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 0, "chip": cursor }]
 
     }
 
@@ -173,7 +172,7 @@ export default function Game() {
     }
   }
 
-  const onMouseMove = (index: number,x: number,width: number,y: number,height: number) => {
+  const onMouseMove = (index: number, x: number, width: number, y: number, height: number) => {
     if (index < 0 || index >= currentSquares.length) {
       setHighlightedCombination([]);
       return;
@@ -184,9 +183,9 @@ export default function Game() {
 
     let combination = new Set([index]);
 
-    if (index == 0) {
+    if (index === 0) {
       if (relativeHeightPosition >= 0.8) {
-        
+
         const widthRanges = [
           { range: [0, 0.2], indices: [index + 1] },
           { range: [0.2, 0.4], indices: [index + 1, index + 2] },
@@ -197,53 +196,47 @@ export default function Game() {
 
         widthRanges.forEach(({ range, indices }) => {
           if (
-            relativeWidthPosition > range[0] &&
+            relativeWidthPosition >= range[0] &&
             relativeWidthPosition <= range[1]
           ) {
             indices.forEach((idx) => combination.add(idx)); // Добавляем индексы в комбинацию
           }
         });
       }
-      setHighlightedCombination(Array.from(combination));
+      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
       return;
     }
 
-    // 1 row from 
-    if (rightBlock.has(index) && relativeWidthPosition >= 0.8) {
-        combination.add(index)
-        combination.add(index - 1)
-        combination.add(index - 2)
-      }
-      
-      // 1 row
-      if (leftBlock.has(index) && relativeWidthPosition <= 0.2) {
-      combination.add(index)
-      combination.add(index + 1)
-      combination.add(index + 2)
-    }
-    
-    if (relativeHeightPosition >= 0.2 && relativeHeightPosition <= 0.8) {
-    } else {
-      const delta = relativeHeightPosition > 0.8 ? 3 : -3;
+
+    if (!(relativeHeightPosition >= 0.2 && relativeHeightPosition <= 0.8)) {
+      const delta = relativeHeightPosition >= 0.8 ? 3 : -3;
       const neighborIndex = index + delta;
-      
+
       if (neighborIndex >= 0 && neighborIndex < currentSquares.length) {
         if (relativeWidthPosition <= 0.2) {
           if (leftBlock.has(index)) {
             combination.add(index);
             combination.add(index + 1);
             combination.add(index + 2);
-            
+
             combination.add(neighborIndex + 1);
             combination.add(neighborIndex + 2);
           }
         } else if (relativeWidthPosition >= 0.8) {
           if (rightBlock.has(index)) {
-            if (index !== 3) {
+            if (index === 3 && relativeHeightPosition <= 0.8) {
               combination.add(index);
               combination.add(index - 1);
               combination.add(index - 2);
-              
+              combination.add(index - 3);
+
+              setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
+              return;
+            } else {
+              combination.add(index);
+              combination.add(index - 1);
+              combination.add(index - 2);
+
               combination.add(neighborIndex - 1);
               combination.add(neighborIndex - 2);
             }
@@ -254,8 +247,27 @@ export default function Game() {
       }
     }
 
-    if (relativeWidthPosition >= 0.2 && relativeWidthPosition <= 0.8) {
-    } else {
+    // 1 row from 
+    if (rightBlock.has(index) && relativeWidthPosition >= 0.8) {
+      combination.add(index)
+      combination.add(index - 1)
+      combination.add(index - 2)
+
+      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
+      return;
+    }
+
+    // 1 row
+    if (leftBlock.has(index) && relativeWidthPosition <= 0.2) {
+      combination.add(index)
+      combination.add(index + 1)
+      combination.add(index + 2)
+
+      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
+      return;
+    }
+
+    if (!(relativeWidthPosition >= 0.2 && relativeWidthPosition <= 0.8)) {
       const delta = relativeWidthPosition > 0.8 ? 1 : -1;
       const neighborIndex = index + delta;
 
