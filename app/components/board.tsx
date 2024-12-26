@@ -30,7 +30,7 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     key={0}
                     index="0"
                     color={
-                        highlightedCombination.includes(0) ? "highlighted" : getRouletteColor(0)
+                        highlightedCombination.includes(0) ? "hover " +  getRouletteColor(0): getRouletteColor(0)
                     }
                     hover={hovered[0]}
                     chip={squares[0].lastChip}
@@ -49,7 +49,7 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                                 key={index}
                                 index={index.toString()}
                                 color={
-                                    highlightedCombination.includes(index) ? "highlighted" : getRouletteColor(index)
+                                    highlightedCombination.includes(index) ? "hover " + getRouletteColor(index) : getRouletteColor(index)
                                 }
                                 hover={hovered[index]}
                                 chip={squares[index].lastChip}
