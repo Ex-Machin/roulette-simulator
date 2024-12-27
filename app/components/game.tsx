@@ -7,12 +7,15 @@ import {
   black,
   even,
   leftBlock,
+  leftColumn,
+  middleColumn,
   nineteenTo36,
   odd,
   oneTo12,
   oneTo18,
   red,
   rightBlock,
+  rightColumn,
   thirteenTo24,
   twentyfiveTo36,
 } from "../utils/ranges";
@@ -67,8 +70,9 @@ export default function Game() {
         ]);
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
+        setBets([...bets, { [highlightedCombination.join("/")]: cursor }]);
       } else {
-
+        
         updatedSquares[i].bet += Number(cursor);
         if (updatedSquares[i].lastChip) {
           second_bet_audio.play();
@@ -76,12 +80,13 @@ export default function Game() {
           first_bet_audio.play();
         }
         updatedSquares[i].lastChip = cursor;
-
-
+        
+        setBets([...bets, { [i]: cursor }]);
+        // To keep history the same
         setBetCombinationsHistory([...betCombinationsHistory, updatedBetCombination])
       }
-
-      setBets([...bets, { [i]: cursor }]);
+      
+      
       setHistory([...history, updatedSquares]);
 
     }
@@ -326,6 +331,8 @@ export default function Game() {
           highlightedCombination={highlightedCombination}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
+          onRangeSelect={onRangeSelect}
+          setHoverState={setHoverState}
         />
       </div>
       <div className="game-info">
@@ -334,58 +341,68 @@ export default function Game() {
           Clear
         </button>
         <RouletteButton
-          label="1-18"
           range={oneTo18}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="1-18"
+          displayedLabel="1-18"
         />
         <RouletteButton
-          label="19-36"
           range={nineteenTo36}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="19-36"
+          displayedLabel="19-36"
         />
         <RouletteButton
-          label="1-12"
           range={oneTo12}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="1-12"
+          displayedLabel="1-12"
         />
         <RouletteButton
-          label="13-24"
           range={thirteenTo24}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="13-24"
+          displayedLabel="13-24"
         />
         <RouletteButton
-          label="25-36"
           range={twentyfiveTo36}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="25-36"
+          displayedLabel="25-36"
         />
         <RouletteButton
-          label="Even"
           range={even}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
-        />
+          betName="Even"
+          displayedLabel="Even"
+          />
         <RouletteButton
-          label="Odd"
           range={odd}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="Odd"
+          displayedLabel="Odd"
         />
         <RouletteButton
-          label="Red"
           range={red}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="Red"
+          displayedLabel="Red"
         />
+
         <RouletteButton
-          label="Black"
           range={black}
-          onSelect={(label) => onRangeSelect(label)}
+          onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
+          betName="Black"
+          displayedLabel="Black"
         />
       </div>
     </div>

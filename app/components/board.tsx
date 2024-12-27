@@ -2,6 +2,8 @@ import { MouseEventHandler } from "react";
 import Chip from "./Chip";
 import Square from "./Sqaure";
 import getRouletteColor from "../utils/functions";
+import { RouletteButton } from "./RoulleteButton";
+import { leftColumn, middleColumn, rightColumn } from "../utils/ranges";
 
 
 export interface BoardProps {
@@ -12,11 +14,13 @@ export interface BoardProps {
     highlightedCombination: number[]
     onMouseLeave: MouseEventHandler<HTMLButtonElement>;
     onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
+    onRangeSelect: Function
+    setHoverState: (range: number[], isHovering: boolean) => void
 }
 
 
-export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave }: BoardProps) {
-    
+export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState }: BoardProps) {
+
 
     const changeCursor = (value: string) => {
         setCursor((prevState: string) => (prevState === value ? "" : value));
@@ -30,7 +34,7 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     key={0}
                     index="0"
                     color={
-                        highlightedCombination.includes(0) ? "hover " +  getRouletteColor(0): getRouletteColor(0)
+                        highlightedCombination.includes(0) ? "hover " + getRouletteColor(0) : getRouletteColor(0)
                     }
                     hover={hovered[0]}
                     chip={squares[0].lastChip}
@@ -62,6 +66,33 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     })}
                 </div>
             ))}
+            <div className="collumns-roullete">
+
+                <RouletteButton
+                    range={leftColumn}
+                    onSelect={(label) => onRangeSelect(label)}
+                    onHover={setHoverState}
+                    className="roullete-button column"
+                    betName="Left Column"
+                    displayedLabel="2to1"
+                />
+                <RouletteButton
+                    range={middleColumn}
+                    onSelect={(label) => onRangeSelect(label)}
+                    onHover={setHoverState}
+                    className="roullete-button column"
+                    betName="Middle Column"
+                    displayedLabel="2to1"
+                />
+                <RouletteButton
+                    range={rightColumn}
+                    onSelect={(label) => onRangeSelect(label)}
+                    onHover={setHoverState}
+                    className="roullete-button column"
+                    betName="Right Column"
+                    displayedLabel="2to1"
+                />
+            </div>
             <div>
                 {[5, 10, 25, 100, 500].map((value) => {
                     return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />

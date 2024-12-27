@@ -1,4 +1,3 @@
-
 .game {
   display: flex;
   flex-direction: row;
@@ -6,12 +5,15 @@
   background-size: 100% 100%;
   height: 100vh;
   overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .square {
   position: relative;
-  width: 33%; /* Задайте ширину для наглядности */
-  height: 45px; /* Задайте высоту для наглядности */
+  width: 33%;
+  /* Задайте ширину для наглядности */
+  height: 45px;
+  /* Задайте высоту для наглядности */
 }
 
 .chip {
@@ -26,7 +28,8 @@
   text-align: center;
   color: white;
   cursor: inherit;
-  width: 35px; /* Кнопка займет весь контейнер */
+  width: 35px;
+  /* Кнопка займет весь контейнер */
   height: 35px;
 }
 
@@ -35,11 +38,10 @@
   height: 100%;
 }
 
-
-
 .square_button {
-  border: 1px solid #999;
+  border: 2px solid #ffffff;
   float: left;
+  border-collapse: collapse;
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
@@ -48,25 +50,23 @@
   text-align: center;
   color: white;
   cursor: inherit;
-  width: 100%; /* Кнопка займет весь контейнер */
+  background-color: green;
+  width: 100%;
+  /* Кнопка займет весь контейнер */
   height: 100%;
 }
 
-.square img.chip_icon  {
+.square img.chip_icon {
   z-index: 2;
   position: absolute;
-  transform: translate(-50%, -50%); 
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 .square_button.green {
-  width: 100%;
+  width: 99%;
   background-color: transparent;
-  /* background-repeat: no-repeat;
-  border: none;
-  cursor: pointer;
-  overflow: hidden;
-  outline: none; */
+  border-radius: 50% 50% 0 0;
 }
 
 .square_button.green.hover {
@@ -74,32 +74,53 @@
 }
 
 .square_button.red {
-  background-color: rgb(165, 20, 20);
+  background-color: rgb(222, 33, 44);
 }
 
 .square_button.red:hover {
-  background-color: rgb(187, 78, 78);
-}
-
-.square_button.black {
-  background-color: rgb(36, 36, 36);
-}
-
-.square_button.black:hover {
-  background-color: rgb(47, 47, 47);
+  background-color: rgb(238, 142, 148);
 }
 
 .square_button.red.hover {
-  background-color: rgb(187, 78, 78);
+  background-color: rgb(238, 142, 148);
+}
+
+.square_button.black {
+  background-color: rgb(8, 8, 8);
+}
+
+.square_button.black:hover {
+  background-color: rgb(130, 130, 130);
 }
 
 .square_button.black.hover {
-  background-color: rgb(47, 47, 47);
+  background-color: rgb(130, 130, 130);
 }
+
 
 .square_button.highlighted {
   transition: background-color 0.3s;
 }
+
+.roullete-button {
+  cursor: inherit;
+}
+
+.roullete-button.column {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  width: 33%;
+}
+
+.roullete-button.column:first-child {
+  border-radius: 0 0 0 25%;
+}
+
+.roullete-button.column:last-child {
+  border-radius: 0 0 25% 0;
+}
+
 
 .board-row {
   display: flex;
