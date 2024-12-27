@@ -1,25 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
-import Board from "./Board";
+import { useState } from "react";
 import {
-  allPossibleRoulleteCombinations,
   black,
   even,
   leftBlock,
-  leftColumn,
-  middleColumn,
   nineteenTo36,
   odd,
   oneTo12,
   oneTo18,
   red,
   rightBlock,
-  rightColumn,
   thirteenTo24,
-  twentyfiveTo36,
+  twentyfiveTo36
 } from "../utils/ranges";
-import { RouletteButton } from "./RoulleteButton";
+import Board from "./Board";
+import RouletteButton from "./RoulleteButton";
+import RouletteButtonColor from "./RoulleteButtonColor";
 
 export type Square = {
   bet: number;
@@ -44,35 +41,25 @@ export default function Game() {
   const [hovered, setHovered] = useState(Array.from({ length: 37 }, () => false));
   const [bets, setBets] = useState<Record<number, string>[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
-  const [betCombinationsHistory, setBetCombinationsHistory] = useState<(typeof allPossibleRoulleteCombinations)[]>([allPossibleRoulleteCombinations]);
 
   let currentSquares = history[history.length - 1];
-  let currentBetCombination = betCombinationsHistory[betCombinationsHistory.length - 1];
 
   function onSquareSelect(i: number) {
     if (cursor !== "") {
-      const updatedBetCombination = { ...currentBetCombination };
       let updatedSquares = currentSquares.map((square) => ({ ...square }));
-      const joinedCombinations = highlightedCombination.join("/");
 
       if (highlightedCombination.length > 1) {
 
-        if (updatedBetCombination[joinedCombinations as keyof typeof allPossibleRoulleteCombinations] !== 0) {
-          second_bet_audio.play();
+        if (updatedSquares[i].combinations.length) {
+          second_bet_audio.play()
         } else {
           first_bet_audio.play();
         }
-        updatedBetCombination[joinedCombinations as keyof typeof allPossibleRoulleteCombinations] += Number(cursor);
-
-        setBetCombinationsHistory([
-          ...betCombinationsHistory,
-          updatedBetCombination,
-        ]);
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
         setBets([...bets, { [highlightedCombination.join("/")]: cursor }]);
       } else {
-        
+
         updatedSquares[i].bet += Number(cursor);
         if (updatedSquares[i].lastChip) {
           second_bet_audio.play();
@@ -80,13 +67,11 @@ export default function Game() {
           first_bet_audio.play();
         }
         updatedSquares[i].lastChip = cursor;
-        
+
         setBets([...bets, { [i]: cursor }]);
-        // To keep history the same
-        setBetCombinationsHistory([...betCombinationsHistory, updatedBetCombination])
       }
-      
-      
+
+
       setHistory([...history, updatedSquares]);
 
     }
@@ -148,7 +133,6 @@ export default function Game() {
     if (history.length > 1) {
       setHistory((prevHistory) => prevHistory.slice(0, -1));
       setBets((prevBets) => prevBets.slice(0, -1));
-      setBetCombinationsHistory((prevBetCombinations) => prevBetCombinations.slice(0, -1));
     }
   }
 
@@ -156,7 +140,6 @@ export default function Game() {
     if (history.length > 1) {
       setHistory(initialState);
       setBets([]);
-      setBetCombinationsHistory([allPossibleRoulleteCombinations])
     }
   }
 
@@ -173,8 +156,21 @@ export default function Game() {
         first_bet_audio.play();
       }
 
+      setHistory([...history, [...currentSquares]]);
       setBets([...bets, { [bet]: cursor }]);
     }
+  }
+
+  function returnLastCursor(label: string): string | undefined {
+    let lastValue: string | undefined = undefined;
+
+    for (const bet of bets) {
+      if (label in bet) {
+        lastValue = bet[label];
+      }
+    }
+
+    return lastValue;
   }
 
   const onMouseMove = (index: number, x: number, width: number, y: number, height: number) => {
@@ -323,6 +319,57 @@ export default function Game() {
       style={{ cursor: `url(./cursors/${cursor}.png) 10 10, auto` }}
     >
       <div className="game-board">
+        <aside className="left-ranges">
+
+        <RouletteButton
+          range={even}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="Even"
+          displayedLabel="Even"
+          lastCursor={returnLastCursor("Even")}
+          />
+        <RouletteButton
+          range={odd}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="Odd"
+          displayedLabel="Odd"
+          lastCursor={returnLastCursor("Odd")}
+          />
+        <RouletteButtonColor
+          range={red}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="Red"
+          imagePath="./red.png"
+          lastCursor={returnLastCursor("Red")}
+          />
+        <RouletteButtonColor
+          range={black}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="Black"
+          imagePath="./black.png"
+          lastCursor={returnLastCursor("Black")}
+          />
+        <RouletteButton
+          range={oneTo18}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="1-18"
+          displayedLabel="1-18"
+          lastCursor={returnLastCursor("1-18")}
+          />
+        <RouletteButton
+          range={nineteenTo36}
+          onSelect={(betName) => onRangeSelect(betName)}
+          onHover={setHoverState}
+          betName="19-36"
+          displayedLabel="19-36"
+          lastCursor={returnLastCursor("19-36")}
+          />
+          </aside>
         <Board
           squares={currentSquares}
           hovered={hovered}
@@ -333,33 +380,17 @@ export default function Game() {
           onMouseLeave={onMouseLeave}
           onRangeSelect={onRangeSelect}
           setHoverState={setHoverState}
+          returnLastCursor={returnLastCursor}
         />
-      </div>
-      <div className="game-info">
-        <button onClick={() => goBack()}>Go Back</button>
-        <button onClick={() => onClear()}>
-          Clear
-        </button>
-        <RouletteButton
-          range={oneTo18}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="1-18"
-          displayedLabel="1-18"
-        />
-        <RouletteButton
-          range={nineteenTo36}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="19-36"
-          displayedLabel="19-36"
-        />
+        <aside className="right-ranges">
+
         <RouletteButton
           range={oneTo12}
           onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
           betName="1-12"
           displayedLabel="1-12"
+          lastCursor={returnLastCursor("1-12")}
         />
         <RouletteButton
           range={thirteenTo24}
@@ -367,43 +398,23 @@ export default function Game() {
           onHover={setHoverState}
           betName="13-24"
           displayedLabel="13-24"
-        />
+          lastCursor={returnLastCursor("13-24")}
+          />
         <RouletteButton
           range={twentyfiveTo36}
           onSelect={(betName) => onRangeSelect(betName)}
           onHover={setHoverState}
           betName="25-36"
           displayedLabel="25-36"
-        />
-        <RouletteButton
-          range={even}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Even"
-          displayedLabel="Even"
+          lastCursor={returnLastCursor("25-36")}
           />
-        <RouletteButton
-          range={odd}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Odd"
-          displayedLabel="Odd"
-        />
-        <RouletteButton
-          range={red}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Red"
-          displayedLabel="Red"
-        />
-
-        <RouletteButton
-          range={black}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Black"
-          displayedLabel="Black"
-        />
+          </aside>
+      </div>
+      <div className="game-info">
+        <button onClick={() => goBack()}>Go Back</button>
+        <button onClick={() => onClear()}>
+          Clear
+        </button>
       </div>
     </div>
   );

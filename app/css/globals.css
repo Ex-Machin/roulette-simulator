@@ -8,12 +8,14 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.game-board {
+  display: flex;
+}
+
 .square {
   position: relative;
   width: 33%;
-  /* Задайте ширину для наглядности */
   height: 45px;
-  /* Задайте высоту для наглядности */
 }
 
 .chip {
@@ -29,7 +31,6 @@
   color: white;
   cursor: inherit;
   width: 35px;
-  /* Кнопка займет весь контейнер */
   height: 35px;
 }
 
@@ -52,7 +53,6 @@
   cursor: inherit;
   background-color: green;
   width: 100%;
-  /* Кнопка займет весь контейнер */
   height: 100%;
 }
 
@@ -70,7 +70,7 @@
 }
 
 .square_button.green.hover {
-  background-color: rgb(174, 174, 174);
+  background-color: rgb(147, 175, 145);
 }
 
 .square_button.red {
@@ -102,25 +102,151 @@
   transition: background-color 0.3s;
 }
 
-.roullete-button {
-  cursor: inherit;
+.board-row .roullete-button-container {
+  position: relative;
+  width: 33%;
+  height: 45px;
 }
 
-.roullete-button.column {
+.board-row .roullete-button-container img.chip_icon {
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.board-row .roullete-button-container button {
   background: transparent;
   color: white;
-  border: 2px solid white;
-  width: 33%;
+  border: 2px solid #ffffff;
+  float: left;
+  border-collapse: collapse;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  text-align: center;
+  color: white;
+  cursor: inherit;
+  width: 100%;
+  height: 100%;
 }
 
-.roullete-button.column:first-child {
+.board-row .roullete-button-container:first-child .roullete-button {
   border-radius: 0 0 0 25%;
 }
 
-.roullete-button.column:last-child {
+.board-row .roullete-button-container:last-child .roullete-button {
   border-radius: 0 0 25% 0;
 }
 
+.right-ranges {
+  margin-top: 45px;
+
+  .roullete-button-container {
+    height: 180px;
+    position: relative;
+
+    &:first-child .roullete-button {
+      border-radius: 0 25% 0 0;
+    }
+    &:last-child .roullete-button {
+      border-radius: 0 0 25% 0;
+    }
+
+    & img {
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .roullete-button {
+      background: transparent;
+      color: white;
+      border: 2px solid #ffffff;
+      float: left;
+      border-collapse: collapse;
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 34px;
+      margin-right: -1px;
+      margin-top: -1px;
+      text-align: center;
+      color: white;
+      cursor: inherit;
+      width: 100%;
+      height: 100%;
+      
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+
+      &:hover {
+        background-color: rgb(147, 175, 145);
+      }
+    }
+
+  }
+}
+
+.left-ranges {
+  margin-top: 45px;
+
+  .roullete-button-container {
+    height: 90px;
+    position: relative;
+
+    &:first-child .roullete-button {
+      border-radius: 25% 0 0 0;
+    }
+    &:last-child .roullete-button {
+      border-radius:  0 0 0 25%;
+    }
+
+    & img {
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .roullete-button {
+      background: transparent;
+      color: white;
+      border: 2px solid #ffffff;
+      float: left;
+      border-collapse: collapse;
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 34px;
+      margin-right: -1px;
+      margin-top: -1px;
+      text-align: center;
+      color: white;
+      cursor: inherit;
+      width: 100%;
+      height: 100%;
+
+      
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+
+      &:hover {
+        background-color: rgb(147, 175, 145);
+      }
+    }
+
+
+
+  }
+}
 
 .board-row {
   display: flex;
@@ -128,16 +254,6 @@
 
 .board-row:first-child .square:first-child {
   width: 100%;
-}
-
-.board-row:after {
-  clear: both;
-  content: '';
-  display: table;
-}
-
-.status {
-  margin-bottom: 10px;
 }
 
 .game-info {

@@ -1,9 +1,9 @@
-import { MouseEventHandler } from "react";
+import { MouseEventHandler, useRef } from "react";
 import Chip from "./Chip";
 import Square from "./Sqaure";
 import getRouletteColor from "../utils/functions";
-import { RouletteButton } from "./RoulleteButton";
 import { leftColumn, middleColumn, rightColumn } from "../utils/ranges";
+import RouletteButton from "./RoulleteButton";
 
 
 export interface BoardProps {
@@ -16,11 +16,11 @@ export interface BoardProps {
     onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
     onRangeSelect: Function
     setHoverState: (range: number[], isHovering: boolean) => void
+    returnLastCursor: Function
 }
 
 
-export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState }: BoardProps) {
-
+export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState, returnLastCursor }: BoardProps) {
 
     const changeCursor = (value: string) => {
         setCursor((prevState: string) => (prevState === value ? "" : value));
@@ -28,7 +28,7 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
 
 
     return (
-        <>
+        <div className="board">
             <div className="board-row" key={0}>
                 <Square
                     key={0}
@@ -66,31 +66,30 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     })}
                 </div>
             ))}
-            <div className="collumns-roullete">
-
+            <div className="board-row">
                 <RouletteButton
                     range={leftColumn}
                     onSelect={(label) => onRangeSelect(label)}
                     onHover={setHoverState}
-                    className="roullete-button column"
                     betName="Left Column"
                     displayedLabel="2to1"
+                    lastCursor={returnLastCursor("Left Column")}
                 />
                 <RouletteButton
                     range={middleColumn}
                     onSelect={(label) => onRangeSelect(label)}
                     onHover={setHoverState}
-                    className="roullete-button column"
                     betName="Middle Column"
                     displayedLabel="2to1"
+                    lastCursor={returnLastCursor("Middle Column")}
                 />
                 <RouletteButton
                     range={rightColumn}
                     onSelect={(label) => onRangeSelect(label)}
                     onHover={setHoverState}
-                    className="roullete-button column"
                     betName="Right Column"
                     displayedLabel="2to1"
+                    lastCursor={returnLastCursor("Right Column")}
                 />
             </div>
             <div>
@@ -98,6 +97,6 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
                 })}
             </div>
-        </>
+        </div>
     );
 }
