@@ -1,7 +1,7 @@
 import { MouseEventHandler, useRef } from "react";
 import Chip from "./Chip";
 import Square from "./Sqaure";
-import getRouletteColor from "../utils/functions";
+import { getRouletteColor } from "../utils/functions";
 import { leftColumn, middleColumn, rightColumn } from "../utils/ranges";
 import RouletteButton from "./RoulleteButton";
 

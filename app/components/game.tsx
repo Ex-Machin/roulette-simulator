@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   black,
   even,
   leftBlock,
   nineteenTo36,
+  numbersToDegree,
   odd,
   oneTo12,
   oneTo18,
@@ -17,6 +18,8 @@ import {
 import Board from "./Board";
 import RouletteButton from "./RoulleteButton";
 import RouletteButtonColor from "./RoulleteButtonColor";
+import Wheel from "./Wheel";
+import { getRandomInt } from "../utils/functions";
 
 export type Square = {
   bet: number;
@@ -33,14 +36,23 @@ export default function Game() {
     combinations: []
   })),
   ];
-  const first_bet_audio = new Audio("./audio/first_bet.mp3");
-  const second_bet_audio = new Audio("./audio/second_bet.mp3");
+  const first_bet_audio = useRef(new Audio("./audio/first_bet.mp3"));
+  const second_bet_audio = useRef(new Audio("./audio/second_bet.mp3"))
+  const wheelSound = useRef(new Audio("./audio/roulette_wheel_sound_effect.mp3"));
 
   const [cursor, setCursor] = useState("");
   const [history, setHistory] = useState(initialState);
   const [hovered, setHovered] = useState(Array.from({ length: 37 }, () => false));
   const [bets, setBets] = useState<Record<number, string>[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [circleRotation, setCircleRotation] = useState<number>(5);
+
+  const isWheelSpinning = useRef(false);
+  const wheelRequestId = useRef<number | null>(null);
+  const circleRequestId = useRef<number | null>(null);
+  const wheelSpinned = useRef(false)
+
 
   let currentSquares = history[history.length - 1];
 
@@ -51,9 +63,9 @@ export default function Game() {
       if (highlightedCombination.length > 1) {
 
         if (updatedSquares[i].combinations.length) {
-          second_bet_audio.play()
+          second_bet_audio.current.play()
         } else {
-          first_bet_audio.play();
+          first_bet_audio.current.play();
         }
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
@@ -62,9 +74,9 @@ export default function Game() {
 
         updatedSquares[i].bet += Number(cursor);
         if (updatedSquares[i].lastChip) {
-          second_bet_audio.play();
+          second_bet_audio.current.play();
         } else {
-          first_bet_audio.play();
+          first_bet_audio.current.play();
         }
         updatedSquares[i].lastChip = cursor;
 
@@ -151,9 +163,9 @@ export default function Game() {
   function onRangeSelect(bet: string) {
     if (cursor) {
       if (bets.some((obj) => obj.hasOwnProperty(bet))) {
-        second_bet_audio.play();
+        second_bet_audio.current.play();
       } else {
-        first_bet_audio.play();
+        first_bet_audio.current.play();
       }
 
       setHistory([...history, [...currentSquares]]);
@@ -313,6 +325,59 @@ export default function Game() {
     setHighlightedCombination([]);
   };
 
+  const calculateWinner = () => {
+    const randomNumber = getRandomInt(36)
+    // @ts-ignore
+    setCircleRotation(numbersToDegree[randomNumber])
+  } 
+
+  const spin = () => {
+    if (isWheelSpinning.current) return;
+    if (!bets.length) return
+
+    calculateWinner()
+
+    const specificDegree = circleRotation
+
+    isWheelSpinning.current = true;
+    wheelSound.current.play();
+
+    const startTime = Date.now();
+    const duration = 4.179592 * 1000; // Установим фиксированную длительность анимации (5 секунд)
+
+    const animate = () => {
+        const elapsed = Date.now() - startTime;
+
+        if (elapsed < duration) {
+            const progress = elapsed / duration;
+
+            // Колесо вращается быстрее в начале, замедляясь к концу
+            const easing = (1 - Math.cos(progress * Math.PI)) / 2;
+            const wheelAngle = easing * 360 * 3; // 3 полных оборота
+            const circleAngle = easing * 360 + specificDegree;
+
+            setWheelRotation(wheelAngle);
+            setCircleRotation(circleAngle);
+
+            wheelRequestId.current = requestAnimationFrame(animate);
+        } else {
+            // Завершение анимации
+            setWheelRotation((prev) => prev + (360 - (prev % 360))); // Остановить на ближайшем секторе
+            setCircleRotation((prev) => prev % 360);
+
+            cancelAnimationFrame(wheelRequestId.current!);
+            cancelAnimationFrame(circleRequestId.current!);
+
+            wheelRequestId.current = null;
+            circleRequestId.current = null;
+            isWheelSpinning.current = false;
+            wheelSpinned.current = true
+        }
+    };
+
+    requestAnimationFrame(animate);
+};
+
   return (
     <div
       className="game"
@@ -411,11 +476,15 @@ export default function Game() {
           </aside>
       </div>
       <div className="game-info">
-        <button onClick={() => goBack()}>Go Back</button>
-        <button onClick={() => onClear()}>
+        <button onClick={goBack}>Go Back</button>
+        <button onClick={onClear}>
           Clear
         </button>
+        <button onClick={spin}>
+          Spin
+        </button>
       </div>
+      <Wheel wheelRotation={wheelRotation} circleRotation={circleRotation} />
     </div>
   );
 }

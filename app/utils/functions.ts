@@ -1,4 +1,4 @@
-export default function getRouletteColor(number: number) {
+export function getRouletteColor(number: number) {
     if (number === 0 || number === 37) return "green";
 
     const redNumbers = [
@@ -6,4 +6,8 @@ export default function getRouletteColor(number: number) {
     ];
 
     return redNumbers.includes(number) ? "red" : "black";
+}
+
+export function getRandomInt(max: number) {
+    return Math.floor(Math.random() * max);
 }

@@ -259,3 +259,26 @@
 .game-info {
   margin-left: 20px;
 }
+
+.wheel-container {
+  position: relative;
+  width: 300px; /* Размер контейнера */
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  .wheel {
+    width: 100%;
+    height: 100%;
+  }
+  .orbiting-circle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%; 
+    transform-origin: center;
+    z-index: 2;
+  }
+}
