@@ -46,7 +46,7 @@ export default function Game() {
   const [bets, setBets] = useState<Record<number, string>[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
   const [wheelRotation, setWheelRotation] = useState(0);
-  const [circleRotation, setCircleRotation] = useState<number>(5);
+  const [circleRotation, setCircleRotation] = useState<number | null>(null);
 
   const isWheelSpinning = useRef(false);
   const wheelRequestId = useRef<number | null>(null);
@@ -178,7 +178,7 @@ export default function Game() {
 
     for (const bet of bets) {
       if (label in bet) {
-        lastValue = bet[label];
+        lastValue = bet[Number(label)];
       }
     }
 
@@ -325,26 +325,21 @@ export default function Game() {
     setHighlightedCombination([]);
   };
 
-  const calculateWinner = () => {
-    const randomNumber = getRandomInt(36)
-    // @ts-ignore
-    setCircleRotation(numbersToDegree[randomNumber])
-  } 
-
   const spin = () => {
     if (isWheelSpinning.current) return;
     if (!bets.length) return
 
-    calculateWinner()
+    const randomNumber = getRandomInt(36)
+    const startingDegree = numbersToDegree[randomNumber as keyof typeof numbersToDegree]
 
-    const specificDegree = circleRotation
+    setCircleRotation(startingDegree)
 
     isWheelSpinning.current = true;
     wheelSound.current.play();
 
     const startTime = Date.now();
-    const duration = 4.179592 * 1000; // Установим фиксированную длительность анимации (5 секунд)
-
+    const duration = 4.179592 * 1000; 
+  
     const animate = () => {
         const elapsed = Date.now() - startTime;
 
@@ -354,7 +349,7 @@ export default function Game() {
             // Колесо вращается быстрее в начале, замедляясь к концу
             const easing = (1 - Math.cos(progress * Math.PI)) / 2;
             const wheelAngle = easing * 360 * 3; // 3 полных оборота
-            const circleAngle = easing * 360 + specificDegree;
+            const circleAngle = easing * 360 + startingDegree;
 
             setWheelRotation(wheelAngle);
             setCircleRotation(circleAngle);
@@ -363,7 +358,7 @@ export default function Game() {
         } else {
             // Завершение анимации
             setWheelRotation((prev) => prev + (360 - (prev % 360))); // Остановить на ближайшем секторе
-            setCircleRotation((prev) => prev % 360);
+            setCircleRotation((prev) => prev as number % 360);
 
             cancelAnimationFrame(wheelRequestId.current!);
             cancelAnimationFrame(circleRequestId.current!);
@@ -372,6 +367,8 @@ export default function Game() {
             circleRequestId.current = null;
             isWheelSpinning.current = false;
             wheelSpinned.current = true
+
+            onClear()
         }
     };
 

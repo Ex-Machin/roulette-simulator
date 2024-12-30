@@ -1,18 +1,20 @@
 interface WheelInterface {
     wheelRotation: number
-    circleRotation: number,
+    circleRotation: number | null,
 }
 
-const Wheel = ({wheelRotation, circleRotation}: WheelInterface) => {
+const Wheel = ({ wheelRotation, circleRotation }: WheelInterface) => {
     return (
         <div>
             <div className="wheel-container">
-                <div
-                className="orbiting-circle"
-                    style={{
-                        transform: `rotate(-${circleRotation}deg) translate(125px)`,
-                    }}
-                />
+                {circleRotation &&
+                    <div
+                        className="orbiting-circle"
+                        style={{
+                            transform: `rotate(-${circleRotation}deg) translate(125px)`,
+                        }}
+                    />
+                }
                 <img
                     style={{ transform: `rotate(${wheelRotation}deg)` }}
                     className="wheel"
