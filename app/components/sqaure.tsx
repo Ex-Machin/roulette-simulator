@@ -1,8 +1,7 @@
-import { SquareProps } from "../interfaces/interfaces";
+import { SquareInterface } from "../interfaces/interfaces";
+import Image from 'next/image';
 
-
-
-export default function Square({ index, color, hover, chip, onSquareClick, onMouseMove, onMouseLeave, combinations }: SquareProps) {
+export default function Square({ index, color, hover, chip, onSquareClick, onMouseMove, onMouseLeave, combinations }: SquareInterface) {
     const className = "square_button " + color + (hover ? " hover" : "")
     
     return (
@@ -20,10 +19,10 @@ export default function Square({ index, color, hover, chip, onSquareClick, onMou
                 {index}
             </button>
             {chip &&
-                <img style={{ top: `${50}%`, left: `${50}%` }} src={`./cursors/${chip}.png`} alt="chip_icon" className='chip_icon' />
+                <Image style={{ top: `${50}%`, left: `${50}%` }} src={`/cursors/${chip}.png`} alt="chip_icon" className='chip_icon' fill={true}/>
             }
             {combinations.map((combination, i) => {
-                return <img key={i} style={{ top: `${combination.top}%`, left: `${combination.left}%` }} src={combination.chip ? `./cursors/${combination.chip}.png` : undefined} alt="chip_icon" className='chip_icon' />
+                return combination.chip  && <Image key={i} style={{ top: `${combination.top}%`, left: `${combination.left}%` }} src={`/cursors/${combination.chip}.png`} alt="chip_icon" className='chip_icon' fill={true}/>
             })}
         </div>
     );

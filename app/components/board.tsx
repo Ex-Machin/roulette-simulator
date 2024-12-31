@@ -1,11 +1,11 @@
-import { BoardProps } from "../interfaces/interfaces";
+import { BoardInterface } from "../interfaces/interfaces";
 import { getRouletteColor } from "../utils/functions";
 import { leftColumn, middleColumn, rightColumn } from "../utils/ranges";
 import RouletteButton from "./RoulleteButton";
 import Square from "./Sqaure";
 
 
-export default function Board({ squares, hovered, onSquareSelect, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState, returnLastCursor }: BoardProps) {
+export default function Board({ squares, hovered, onSquareSelect, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState, returnLastCursor }: BoardInterface) {
     return (
         <div className="board">
             <div className="board-row" key={0}>

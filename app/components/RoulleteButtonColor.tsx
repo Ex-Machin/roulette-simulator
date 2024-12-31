@@ -1,7 +1,7 @@
-import { RouletteButtonColorProps } from "../interfaces/interfaces"
+import { RouletteButtonColorInterface } from "../interfaces/interfaces"
+import Image from 'next/image';
 
-
-export default function RouletteButtonColor({ range, onSelect, onHover, imagePath, betName, lastCursor }: RouletteButtonColorProps) {
+export default function RouletteButtonColor({ range, onSelect, onHover, imagePath, betName, lastCursor }: RouletteButtonColorInterface) {
     return (
         <div className="roullete-button-container">
             <button
@@ -10,10 +10,10 @@ export default function RouletteButtonColor({ range, onSelect, onHover, imagePat
                 onClick={() => { onSelect(betName) }}
                 className="roullete-button"
             >
-                <img src={imagePath} alt="roullete-image-button" />
+                <Image src={imagePath} alt="roullete-image-button" width={40} height={40} />
             </button>
             {lastCursor &&
-                <img src={`./cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon' />
+                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  fill={true}/>
             }
         </div>
     )

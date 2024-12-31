@@ -7,24 +7,24 @@ export type Square = {
     combinations: Record<"top" | "left" | "chip", number | string>[]
 };
 
-export interface BoardProps {
+export interface BoardInterface {
     squares: Square[];
     hovered: boolean[];
-    onSquareSelect: Function;
+    onSquareSelect: (i: number) => void;
     highlightedCombination: number[]
     onMouseLeave: MouseEventHandler<HTMLButtonElement>;
     onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
-    onRangeSelect: Function
+    onRangeSelect: (bet: string) => void
     setHoverState: (range: number[], isHovering: boolean) => void
-    returnLastCursor: Function
+    returnLastCursor: (label: string) => string | undefined
 }
 
-export interface ChipProps {
+export interface ChipInterface {
     value: number;
     onCursorClick: MouseEventHandler<HTMLButtonElement>;
 }
 
-export type RouletteButtonProps = {
+export interface RouletteButtonInterface {
     range: number[];
     onSelect: (range: string) => void;
     onHover: (range: number[], isHovering: boolean) => void;
@@ -33,7 +33,7 @@ export type RouletteButtonProps = {
     lastCursor: string | undefined
 };
 
-export type RouletteButtonColorProps = {
+export interface RouletteButtonColorInterface {
     range: number[];
     onSelect: (range: string) => void;
     onHover: (range: number[], isHovering: boolean) => void;
@@ -42,13 +42,13 @@ export type RouletteButtonColorProps = {
     lastCursor: string | undefined
 };
 
-export interface SquareProps {
+export interface SquareInterface {
     index: string;
     color: string;
     hover: boolean;
     chip: null | string;
     onSquareClick: MouseEventHandler<HTMLButtonElement>;
-    onMouseMove: Function;
+    onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
     onMouseLeave: MouseEventHandler<HTMLButtonElement>;
     combinations: Record<"top" | "left" | "chip", number | string>[]
 }

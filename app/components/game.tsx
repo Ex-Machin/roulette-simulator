@@ -24,7 +24,7 @@ import RouletteButtonColor from "./RoulleteButtonColor";
 import Wheel from "./Wheel";
 
 export default function Game() {
-  const initialState: Square[][] = [Array.from({ length: 37 }, (_, i) => ({
+  const initialState: Square[][] = [Array.from({ length: 37 }, () => ({
     bet: 0,
     lastChip: null,
     hover: null,
@@ -49,7 +49,7 @@ export default function Game() {
   const wheelSpinned = useRef(false)
 
 
-  let currentSquares = history[history.length - 1];
+  const currentSquares = history[history.length - 1];
 
   function onSquareSelect(i: number) {
     if (cursor !== "") {
@@ -58,9 +58,13 @@ export default function Game() {
       if (highlightedCombination.length > 1) {
 
         if (updatedSquares[i].combinations.length) {
-          second_bet_audio.current && second_bet_audio.current.play()
+          if (second_bet_audio.current) {
+            second_bet_audio.current.play()
+          }
         } else {
-          first_bet_audio.current && first_bet_audio.current.play();
+          if (first_bet_audio.current) {
+            first_bet_audio.current.play();
+          } 
         }
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
@@ -69,9 +73,13 @@ export default function Game() {
 
         updatedSquares[i].bet += Number(cursor);
         if (updatedSquares[i].lastChip) {
-          second_bet_audio.current && second_bet_audio.current.play();
+          if (second_bet_audio.current) {
+            second_bet_audio.current.play();
+          }
         } else {
-          first_bet_audio.current && first_bet_audio.current.play();
+          if (first_bet_audio.current) {
+            first_bet_audio.current.play();
+          }
         }
         updatedSquares[i].lastChip = cursor;
 
@@ -158,9 +166,13 @@ export default function Game() {
   function onRangeSelect(bet: string) {
     if (cursor) {
       if (bets.some((obj) => obj.hasOwnProperty(bet))) {
-        second_bet_audio.current && second_bet_audio.current.play();
+        if (second_bet_audio.current) {
+          second_bet_audio.current.play();
+        }
       } else {
-        first_bet_audio.current && first_bet_audio.current.play();
+        if (first_bet_audio.current) {
+          first_bet_audio.current.play();
+        }
       }
 
       setHistory([...history, [...currentSquares]]);
@@ -173,8 +185,7 @@ export default function Game() {
 
     for (const bet of bets) {
       if (label in bet) {
-        // @ts-ignore
-        lastValue = bet[label];
+        lastValue = bet[label as unknown as number];
       }
     }
 
@@ -190,7 +201,7 @@ export default function Game() {
     const relativeWidthPosition = x / width;
     const relativeHeightPosition = y / height;
 
-    let combination = new Set([index]);
+    const combination = new Set([index]);
 
     if (index === 0) {
       if (relativeHeightPosition >= 0.8) {
@@ -331,7 +342,9 @@ export default function Game() {
     setCircleRotation(startingDegree)
 
     isWheelSpinning.current = true;
-    wheelSound.current && wheelSound.current.play();
+    if (wheelSound.current) {
+      wheelSound.current.play();
+    }
 
     const startTime = Date.now();
     const duration = 4.179592 * 1000;
@@ -401,7 +414,7 @@ export default function Game() {
             onSelect={(betName) => onRangeSelect(betName)}
             onHover={setHoverState}
             betName="Red"
-            imagePath="./red.png"
+            imagePath="/red.png"
             lastCursor={returnLastCursor("Red")}
           />
           <RouletteButtonColor
@@ -409,7 +422,7 @@ export default function Game() {
             onSelect={(betName) => onRangeSelect(betName)}
             onHover={setHoverState}
             betName="Black"
-            imagePath="./black.png"
+            imagePath="/black.png"
             lastCursor={returnLastCursor("Black")}
           />
           <RouletteButton

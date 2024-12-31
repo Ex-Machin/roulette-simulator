@@ -1,6 +1,7 @@
-import { RouletteButtonProps } from "../interfaces/interfaces"
+import { RouletteButtonInterface } from "../interfaces/interfaces"
+import Image from 'next/image';
 
-export default function RouletteButton({ range, onSelect, onHover, displayedLabel, betName, lastCursor }: RouletteButtonProps) {
+export default function RouletteButton({ range, onSelect, onHover, displayedLabel, betName, lastCursor }: RouletteButtonInterface) {
     return (
         <div className="roullete-button-container">
             <button
@@ -12,7 +13,7 @@ export default function RouletteButton({ range, onSelect, onHover, displayedLabe
                 {displayedLabel}
             </button>
             {lastCursor &&
-                <img src={`./cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon' />
+                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  fill={true}/>
             }
         </div>
     )

@@ -1,6 +1,7 @@
 import { WheelInterface } from "../interfaces/interfaces";
+import Image from 'next/image';
 
-const Wheel = ({ wheelRotation, circleRotation }: WheelInterface) => {
+export default function Wheel({ wheelRotation, circleRotation }: WheelInterface) {
     return (
         <div>
             <div className="wheel-container">
@@ -12,15 +13,14 @@ const Wheel = ({ wheelRotation, circleRotation }: WheelInterface) => {
                         }}
                     />
                 }
-                <img
+                <Image
                     style={{ transform: `rotate(${wheelRotation}deg)` }}
                     className="wheel"
-                    src="./wheel.png"
+                    src="/wheel.png"
                     alt="wheel"
+                    fill={true}
                 />
             </div>
         </div>
     );
 };
-
-export default Wheel;
