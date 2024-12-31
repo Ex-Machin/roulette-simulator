@@ -1,32 +1,11 @@
-import { MouseEventHandler, useRef } from "react";
-import Chip from "./Chip";
-import Square from "./Sqaure";
+import { BoardProps } from "../interfaces/interfaces";
 import { getRouletteColor } from "../utils/functions";
 import { leftColumn, middleColumn, rightColumn } from "../utils/ranges";
 import RouletteButton from "./RoulleteButton";
+import Square from "./Sqaure";
 
 
-export interface BoardProps {
-    squares: any;
-    hovered: boolean[];
-    onSquareSelect: Function;
-    setCursor: Function;
-    highlightedCombination: number[]
-    onMouseLeave: MouseEventHandler<HTMLButtonElement>;
-    onMouseMove: (index: number, x: number, width: number, y: number, height: number) => void;
-    onRangeSelect: Function
-    setHoverState: (range: number[], isHovering: boolean) => void
-    returnLastCursor: Function
-}
-
-
-export default function Board({ squares, hovered, onSquareSelect, setCursor, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState, returnLastCursor }: BoardProps) {
-
-    const changeCursor = (value: string) => {
-        setCursor((prevState: string) => (prevState === value ? "" : value));
-    };
-
-
+export default function Board({ squares, hovered, onSquareSelect, highlightedCombination, onMouseMove, onMouseLeave, onRangeSelect, setHoverState, returnLastCursor }: BoardProps) {
     return (
         <div className="board">
             <div className="board-row" key={0}>
@@ -91,11 +70,6 @@ export default function Board({ squares, hovered, onSquareSelect, setCursor, hig
                     displayedLabel="2to1"
                     lastCursor={returnLastCursor("Right Column")}
                 />
-            </div>
-            <div>
-                {[5, 10, 25, 100, 500].map((value) => {
-                    return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
-                })}
             </div>
         </div>
     );

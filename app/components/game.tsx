@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Square } from "../interfaces/interfaces";
+import { getRandomInt } from "../utils/functions";
 import {
   black,
   even,
@@ -16,17 +18,10 @@ import {
   twentyfiveTo36
 } from "../utils/ranges";
 import Board from "./Board";
+import Chip from "./Chip";
 import RouletteButton from "./RoulleteButton";
 import RouletteButtonColor from "./RoulleteButtonColor";
 import Wheel from "./Wheel";
-import { getRandomInt } from "../utils/functions";
-
-export type Square = {
-  bet: number;
-  lastChip: null | string;
-  hover: null | boolean;
-  combinations: Record<"top" | "left" | "chip", number | string>[]
-};
 
 export default function Game() {
   const initialState: Square[][] = [Array.from({ length: 37 }, (_, i) => ({
@@ -36,9 +31,9 @@ export default function Game() {
     combinations: []
   })),
   ];
-  const first_bet_audio = useRef(new Audio("./audio/first_bet.mp3"));
-  const second_bet_audio = useRef(new Audio("./audio/second_bet.mp3"))
-  const wheelSound = useRef(new Audio("./audio/roulette_wheel_sound_effect.mp3"));
+  const first_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/first_bet.mp3"));
+  const second_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/second_bet.mp3"))
+  const wheelSound = useRef(typeof Audio !== "undefined" && new Audio("./audio/roulette_wheel_sound_effect.mp3"));
 
   const [cursor, setCursor] = useState("");
   const [history, setHistory] = useState(initialState);
@@ -63,9 +58,9 @@ export default function Game() {
       if (highlightedCombination.length > 1) {
 
         if (updatedSquares[i].combinations.length) {
-          second_bet_audio.current.play()
+          second_bet_audio.current && second_bet_audio.current.play()
         } else {
-          first_bet_audio.current.play();
+          first_bet_audio.current && first_bet_audio.current.play();
         }
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
@@ -74,9 +69,9 @@ export default function Game() {
 
         updatedSquares[i].bet += Number(cursor);
         if (updatedSquares[i].lastChip) {
-          second_bet_audio.current.play();
+          second_bet_audio.current && second_bet_audio.current.play();
         } else {
-          first_bet_audio.current.play();
+          first_bet_audio.current && first_bet_audio.current.play();
         }
         updatedSquares[i].lastChip = cursor;
 
@@ -163,9 +158,9 @@ export default function Game() {
   function onRangeSelect(bet: string) {
     if (cursor) {
       if (bets.some((obj) => obj.hasOwnProperty(bet))) {
-        second_bet_audio.current.play();
+        second_bet_audio.current && second_bet_audio.current.play();
       } else {
-        first_bet_audio.current.play();
+        first_bet_audio.current && first_bet_audio.current.play();
       }
 
       setHistory([...history, [...currentSquares]]);
@@ -178,7 +173,8 @@ export default function Game() {
 
     for (const bet of bets) {
       if (label in bet) {
-        lastValue = bet[Number(label)];
+        // @ts-ignore
+        lastValue = bet[label];
       }
     }
 
@@ -335,108 +331,108 @@ export default function Game() {
     setCircleRotation(startingDegree)
 
     isWheelSpinning.current = true;
-    wheelSound.current.play();
+    wheelSound.current && wheelSound.current.play();
 
     const startTime = Date.now();
-    const duration = 4.179592 * 1000; 
-  
+    const duration = 4.179592 * 1000;
+
     const animate = () => {
-        const elapsed = Date.now() - startTime;
+      const elapsed = Date.now() - startTime;
 
-        if (elapsed < duration) {
-            const progress = elapsed / duration;
+      if (elapsed < duration) {
+        const progress = elapsed / duration;
 
-            // Колесо вращается быстрее в начале, замедляясь к концу
-            const easing = (1 - Math.cos(progress * Math.PI)) / 2;
-            const wheelAngle = easing * 360 * 3; // 3 полных оборота
-            const circleAngle = easing * 360 + startingDegree;
+        // Колесо вращается быстрее в начале, замедляясь к концу
+        const easing = (1 - Math.cos(progress * Math.PI)) / 2;
+        const wheelAngle = easing * 360 * 3; // 3 полных оборота
+        const circleAngle = easing * 360 + startingDegree;
 
-            setWheelRotation(wheelAngle);
-            setCircleRotation(circleAngle);
+        setWheelRotation(wheelAngle);
+        setCircleRotation(circleAngle);
 
-            wheelRequestId.current = requestAnimationFrame(animate);
-        } else {
-            // Завершение анимации
-            setWheelRotation((prev) => prev + (360 - (prev % 360))); // Остановить на ближайшем секторе
-            setCircleRotation((prev) => prev as number % 360);
+        wheelRequestId.current = requestAnimationFrame(animate);
+      } else {
+        // Завершение анимации
+        setWheelRotation((prev) => prev + (360 - (prev % 360))); // Остановить на ближайшем секторе
+        setCircleRotation((prev) => prev as number % 360);
 
-            cancelAnimationFrame(wheelRequestId.current!);
-            cancelAnimationFrame(circleRequestId.current!);
+        cancelAnimationFrame(wheelRequestId.current!);
+        cancelAnimationFrame(circleRequestId.current!);
 
-            wheelRequestId.current = null;
-            circleRequestId.current = null;
-            isWheelSpinning.current = false;
-            wheelSpinned.current = true
+        wheelRequestId.current = null;
+        circleRequestId.current = null;
+        isWheelSpinning.current = false;
+        wheelSpinned.current = true
 
-            onClear()
-        }
+        onClear()
+      }
     };
 
     requestAnimationFrame(animate);
-};
+  };
+
+
+  const changeCursor = (value: string) => {
+    setCursor((prevState: string) => (prevState === value ? "" : value));
+  };
 
   return (
-    <div
-      className="game"
-      style={{ cursor: `url(./cursors/${cursor}.png) 10 10, auto` }}
-    >
+    <div className="game" style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}>
       <div className="game-board">
         <aside className="left-ranges">
-
-        <RouletteButton
-          range={even}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Even"
-          displayedLabel="Even"
-          lastCursor={returnLastCursor("Even")}
+          <RouletteButton
+            range={even}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="Even"
+            displayedLabel="Even"
+            lastCursor={returnLastCursor("Even")}
           />
-        <RouletteButton
-          range={odd}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Odd"
-          displayedLabel="Odd"
-          lastCursor={returnLastCursor("Odd")}
+          <RouletteButton
+            range={odd}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="Odd"
+            displayedLabel="Odd"
+            lastCursor={returnLastCursor("Odd")}
           />
-        <RouletteButtonColor
-          range={red}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Red"
-          imagePath="./red.png"
-          lastCursor={returnLastCursor("Red")}
+          <RouletteButtonColor
+            range={red}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="Red"
+            imagePath="./red.png"
+            lastCursor={returnLastCursor("Red")}
           />
-        <RouletteButtonColor
-          range={black}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="Black"
-          imagePath="./black.png"
-          lastCursor={returnLastCursor("Black")}
+          <RouletteButtonColor
+            range={black}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="Black"
+            imagePath="./black.png"
+            lastCursor={returnLastCursor("Black")}
           />
-        <RouletteButton
-          range={oneTo18}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="1-18"
-          displayedLabel="1-18"
-          lastCursor={returnLastCursor("1-18")}
+          <RouletteButton
+            range={oneTo18}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="1-18"
+            displayedLabel="1-18"
+            lastCursor={returnLastCursor("1-18")}
           />
-        <RouletteButton
-          range={nineteenTo36}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="19-36"
-          displayedLabel="19-36"
-          lastCursor={returnLastCursor("19-36")}
+          <RouletteButton
+            range={nineteenTo36}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="19-36"
+            displayedLabel="19-36"
+            lastCursor={returnLastCursor("19-36")}
           />
-          </aside>
+        </aside>
         <Board
           squares={currentSquares}
           hovered={hovered}
           onSquareSelect={onSquareSelect}
-          setCursor={setCursor}
           highlightedCombination={highlightedCombination}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
@@ -446,42 +442,51 @@ export default function Game() {
         />
         <aside className="right-ranges">
 
-        <RouletteButton
-          range={oneTo12}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="1-12"
-          displayedLabel="1-12"
-          lastCursor={returnLastCursor("1-12")}
-        />
-        <RouletteButton
-          range={thirteenTo24}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="13-24"
-          displayedLabel="13-24"
-          lastCursor={returnLastCursor("13-24")}
+          <RouletteButton
+            range={oneTo12}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="1-12"
+            displayedLabel="1-12"
+            lastCursor={returnLastCursor("1-12")}
           />
-        <RouletteButton
-          range={twentyfiveTo36}
-          onSelect={(betName) => onRangeSelect(betName)}
-          onHover={setHoverState}
-          betName="25-36"
-          displayedLabel="25-36"
-          lastCursor={returnLastCursor("25-36")}
+          <RouletteButton
+            range={thirteenTo24}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="13-24"
+            displayedLabel="13-24"
+            lastCursor={returnLastCursor("13-24")}
           />
-          </aside>
+          <RouletteButton
+            range={twentyfiveTo36}
+            onSelect={(betName) => onRangeSelect(betName)}
+            onHover={setHoverState}
+            betName="25-36"
+            displayedLabel="25-36"
+            lastCursor={returnLastCursor("25-36")}
+          />
+        </aside>
       </div>
       <div className="game-info">
-        <button onClick={goBack}>Go Back</button>
-        <button onClick={onClear}>
-          Clear
-        </button>
-        <button onClick={spin}>
-          Spin
-        </button>
+        <div className="buttons">
+
+          <button onClick={goBack}>Go Back</button>
+          <button onClick={onClear}>
+            Clear
+          </button>
+          <button onClick={spin}>
+            Spin
+          </button>
+        </div>
+        <Wheel wheelRotation={wheelRotation} circleRotation={circleRotation} />
+        <div className="chips">
+          {[5, 10, 25, 100, 500].map((value) => {
+            return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
+          })}
+        </div>
       </div>
-      <Wheel wheelRotation={wheelRotation} circleRotation={circleRotation} />
+
     </div>
   );
 }

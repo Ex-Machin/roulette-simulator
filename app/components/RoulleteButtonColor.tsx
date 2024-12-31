@@ -1,14 +1,7 @@
+import { RouletteButtonColorProps } from "../interfaces/interfaces"
 
-type RouletteButtonProps = {
-    range: number[];
-    onSelect: (range: string) => void;
-    onHover: (range: number[], isHovering: boolean) => void;
-    imagePath: string
-    betName: string
-    lastCursor: string | undefined
-};
 
-export default function RouletteButtonColor({ range, onSelect, onHover, imagePath, betName, lastCursor }: RouletteButtonProps) {
+export default function RouletteButtonColor({ range, onSelect, onHover, imagePath, betName, lastCursor }: RouletteButtonColorProps) {
     return (
         <div className="roullete-button-container">
             <button

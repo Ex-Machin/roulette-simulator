@@ -1,7 +1,4 @@
-interface WheelInterface {
-    wheelRotation: number
-    circleRotation: number | null,
-}
+import { WheelInterface } from "../interfaces/interfaces";
 
 const Wheel = ({ wheelRotation, circleRotation }: WheelInterface) => {
     return (

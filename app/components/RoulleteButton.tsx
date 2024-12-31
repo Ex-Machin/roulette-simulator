@@ -1,12 +1,4 @@
-
-type RouletteButtonProps = {
-    range: number[];
-    onSelect: (range: string) => void;
-    onHover: (range: number[], isHovering: boolean) => void;
-    displayedLabel: string
-    betName: string
-    lastCursor: string | undefined
-};
+import { RouletteButtonProps } from "../interfaces/interfaces"
 
 export default function RouletteButton({ range, onSelect, onHover, displayedLabel, betName, lastCursor }: RouletteButtonProps) {
     return (
