@@ -52,6 +52,7 @@ export default function Game() {
   const currentSquares = history[history.length - 1];
 
   function onSquareSelect(i: number) {
+    if (isWheelSpinning.current) return;
     if (cursor !== "") {
       let updatedSquares = currentSquares.map((square) => ({ ...square }));
 

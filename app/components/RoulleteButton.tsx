@@ -13,7 +13,7 @@ export default function RouletteButton({ range, onSelect, onHover, displayedLabe
                 {displayedLabel}
             </button>
             {lastCursor &&
-                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  fill={true}/>
+                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  width={35} height={35}/>
             }
         </div>
     )
