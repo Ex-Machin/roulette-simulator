@@ -421,6 +421,7 @@ export default function Game() {
         wheelRequestId.current = requestAnimationFrame(animate);
       } else {
         // Ensure final stop on a valid sector
+        //@ts-ignore
         const finalWheelAngle = Math.ceil((wheelRef.current?.style.transform.replace(/[^\d.]/g, '') || 0) % 360);
         const finalCircleAngle = startingDegree % 360;
   
