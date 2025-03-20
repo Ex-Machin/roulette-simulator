@@ -35,8 +35,9 @@ export default function Game() {
   const second_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/second_bet.mp3"))
   const wheelSound = useRef(typeof Audio !== "undefined" && new Audio("./audio/roulette_wheel_sound_effect.mp3"));
 
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
   const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
@@ -45,7 +46,6 @@ export default function Game() {
 
     const fetchData = async () => {
       try {
-        // const response = await fetch(`https://20.215.40.121:7024/api/Users?id=${id}`);
         const response = await fetch(`https://20.215.40.121:7024/api/Users?id=${id}`);
 
         if (response.ok) {
@@ -59,7 +59,7 @@ export default function Game() {
             setLoading(false);
           }
         }
-      } catch (err) {
+      } catch {
         setError('Something went wrong. The page is unavailable.');
         setLoading(false);
       }
@@ -76,7 +76,6 @@ export default function Game() {
 
   const isWheelSpinning = useRef(false);
   const wheelRequestId = useRef<number | null>(null);
-  const circleRequestId = useRef<number | null>(null);
   const wheelSpinned = useRef(false)
 
   const wheelRef = useRef<HTMLImageElement>(null); // Correct type here
@@ -421,7 +420,7 @@ export default function Game() {
         wheelRequestId.current = requestAnimationFrame(animate);
       } else {
         // Ensure final stop on a valid sector
-        //@ts-ignore
+        //@ts-expect-error
         const finalWheelAngle = Math.ceil((wheelRef.current?.style.transform.replace(/[^\d.]/g, '') || 0) % 360);
         const finalCircleAngle = startingDegree % 360;
   
