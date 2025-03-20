@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Square } from "../interfaces/interfaces";
 import { getRandomInt } from "../utils/functions";
 import {
@@ -21,7 +21,7 @@ import Board from "./Board";
 import Chip from "./Chip";
 import RouletteButton from "./RoulleteButton";
 import RouletteButtonColor from "./RoulleteButtonColor";
-import Wheel from "./Wheel";
+import Image from 'next/image';
 
 export default function Game() {
   const initialState: Square[][] = [Array.from({ length: 37 }, () => ({
@@ -35,18 +35,52 @@ export default function Game() {
   const second_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/second_bet.mp3"))
   const wheelSound = useRef(typeof Audio !== "undefined" && new Audio("./audio/roulette_wheel_sound_effect.mp3"));
 
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    const path = window.location.pathname; // Get the current path
+    const id = path.split('/')[1]; // Extract the ID (assumes the URL structure is localhost:3000/{id})
+
+    const fetchData = async () => {
+      try {
+        // const response = await fetch(`https://20.215.40.121:7024/api/Users?id=${id}`);
+        const response = await fetch(`https://20.215.40.121:7024/api/Users?id=${id}`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.length != 0) {
+            setUserData(data);
+            setLoading(false);
+          } else {
+            setError('Something went wrong. The page is unavailable.');
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        setError('Something went wrong. The page is unavailable.');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array to run the effect only once when the component mounts
+
   const [cursor, setCursor] = useState("");
   const [history, setHistory] = useState(initialState);
   const [hovered, setHovered] = useState(Array.from({ length: 37 }, () => false));
   const [bets, setBets] = useState<Record<number, string>[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [circleRotation, setCircleRotation] = useState<number | null>(null);
 
   const isWheelSpinning = useRef(false);
   const wheelRequestId = useRef<number | null>(null);
   const circleRequestId = useRef<number | null>(null);
   const wheelSpinned = useRef(false)
+
+  const wheelRef = useRef<HTMLImageElement>(null); // Correct type here
+  const circleRef = useRef<HTMLDivElement>(null); // Ref for the orbiting circle
 
 
   const currentSquares = history[history.length - 1];
@@ -65,7 +99,7 @@ export default function Game() {
         } else {
           if (first_bet_audio.current) {
             first_bet_audio.current.play();
-          } 
+          }
         }
 
         updatedSquares = calculatePositions(updatedSquares, cursor)
@@ -91,6 +125,14 @@ export default function Game() {
       setHistory([...history, updatedSquares]);
 
     }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
   }
 
   function calculatePositions(squares: Square[], cursor: string) {
@@ -335,56 +377,76 @@ export default function Game() {
 
   const spin = () => {
     if (isWheelSpinning.current) return;
-    if (!bets.length) return
-
-    const randomNumber = getRandomInt(36)
-    const startingDegree = numbersToDegree[randomNumber as keyof typeof numbersToDegree]
-
-    setCircleRotation(startingDegree)
-
+    if (!bets.length) return;
+  
+    const randomNumber = getRandomInt(36);
+    const startingDegree = numbersToDegree[randomNumber as keyof typeof numbersToDegree];
+  
     isWheelSpinning.current = true;
+    wheelSpinned.current = false;
+  
     if (wheelSound.current) {
+      wheelSound.current.currentTime = 0;
       wheelSound.current.play();
     }
-
-    const startTime = Date.now();
-    const duration = 4.179592 * 1000;
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-
+  
+    const duration = 4.18 * 1000; // Animation time
+    const startTime = performance.now();
+  
+    let lastFrameTime = startTime;
+  
+    const animate = (currentTime: number) => {
+      // Limit to 60FPS (16ms per frame)
+      if (currentTime - lastFrameTime < 16) {
+        wheelRequestId.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime = currentTime;
+  
+      const elapsed = currentTime - startTime;
       if (elapsed < duration) {
         const progress = elapsed / duration;
-
-        // Колесо вращается быстрее в начале, замедляясь к концу
         const easing = (1 - Math.cos(progress * Math.PI)) / 2;
-        const wheelAngle = easing * 360 * 3; // 3 полных оборота
-        const circleAngle = easing * 360 + startingDegree;
-
-        setWheelRotation(wheelAngle);
-        setCircleRotation(circleAngle);
-
+  
+        const newWheelRotation = easing * 360 * 3; // 3 full rotations
+        const newCircleRotation = easing * 360 + startingDegree;
+  
+        if (wheelRef.current) {
+          wheelRef.current.style.transform = `rotate(${newWheelRotation}deg)`;
+        }
+        if (circleRef.current) {
+          circleRef.current.style.transform = `rotate(-${newCircleRotation}deg) translate(125px)`;
+        }
+  
         wheelRequestId.current = requestAnimationFrame(animate);
       } else {
-        // Завершение анимации
-        setWheelRotation((prev) => prev + (360 - (prev % 360))); // Остановить на ближайшем секторе
-        setCircleRotation((prev) => prev as number % 360);
-
+        // Ensure final stop on a valid sector
+        const finalWheelAngle = Math.ceil((wheelRef.current?.style.transform.replace(/[^\d.]/g, '') || 0) % 360);
+        const finalCircleAngle = startingDegree % 360;
+  
+        if (wheelRef.current) {
+          wheelRef.current.style.transform = `rotate(${finalWheelAngle}deg)`;
+        }
+        if (circleRef.current) {
+          circleRef.current.style.transform = `rotate(-${finalCircleAngle}deg) translate(125px)`;
+        }
+  
         cancelAnimationFrame(wheelRequestId.current!);
-        cancelAnimationFrame(circleRequestId.current!);
-
         wheelRequestId.current = null;
-        circleRequestId.current = null;
+  
         isWheelSpinning.current = false;
-        wheelSpinned.current = true
-
-        onClear()
+        wheelSpinned.current = true;
+  
+        onClear(); // Reset bets, etc.
       }
     };
-
-    requestAnimationFrame(animate);
+  
+    // Cancel any previous animations before starting a new one
+    if (wheelRequestId.current) cancelAnimationFrame(wheelRequestId.current);
+  
+    // Start animation
+    wheelRequestId.current = requestAnimationFrame(animate);
   };
-
 
   const changeCursor = (value: string) => {
     setCursor((prevState: string) => (prevState === value ? "" : value));
@@ -394,6 +456,9 @@ export default function Game() {
     <div className="game" style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}>
       <div className="game-board">
         <aside className="left-ranges">
+          <h1>User Details</h1>
+          <p>ID: {userData[0].id}</p>
+          <p>Name: {userData[0].name}</p>
           <RouletteButton
             range={even}
             onSelect={(betName) => onRangeSelect(betName)}
@@ -493,7 +558,27 @@ export default function Game() {
             Spin
           </button>
         </div>
-        <Wheel wheelRotation={wheelRotation} circleRotation={circleRotation} />
+        <div>
+          <div className="wheel-container">
+            {/* {circleRotation && */}
+              <div
+                className="orbiting-circle"
+                ref={circleRef}
+                // style={{
+                  // transform: `rotate(-${circleRotation}deg) translate(125px)`,
+                // }}
+              />
+            {/* } */}
+            <Image
+              // style={{ transform: `rotate(${wheelRotation}deg)` }}
+              ref={wheelRef}
+              className="wheel"
+              src="/wheel.png"
+              alt="wheel"
+              fill={true}
+            />
+          </div>
+        </div>
         <div className="chips">
           {[5, 10, 25, 100, 500].map((value) => {
             return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
