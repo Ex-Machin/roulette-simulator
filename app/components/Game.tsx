@@ -46,7 +46,7 @@ export default function Game() {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`https://20.215.40.121:7024/api/Users?id=${id}`);
+        const response = await fetch(`https://localhost:7024/api/Users?id=${id}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -456,8 +456,6 @@ export default function Game() {
     <div className="game" style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}>
       <div className="game-board">
         <aside className="left-ranges">
-          <h1>User Details</h1>
-          <p>ID: {userData[0].id}</p>
           <p>Name: {userData[0].name}</p>
           <RouletteButton
             range={even}
