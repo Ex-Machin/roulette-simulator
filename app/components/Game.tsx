@@ -42,11 +42,14 @@ export default function Game() {
 
   useEffect(() => {
     const path = window.location.pathname; // Get the current path
-    const id = path.split('/')[1]; // Extract the ID (assumes the URL structure is localhost:3000/{id})
+    let id = path.split('/')[1]; // Extract the ID (assumes the URL structure is localhost:3000/{id})
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`https://165.227.145.95:7024/api/Users?id=${id}`);
+
+        // const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BACKEND}/Users?id=${id || 34}`);
+        // const response = await fetch(`https://localhost:7024/api/Users?id=${id}`);
+        const response = await fetch(`https://api.valuebargains.store:7024/api/Users`);
 
         if (response.ok) {
           const data = await response.json();
