@@ -46,7 +46,7 @@ export default function Game() {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`https://localhost:7024/api/Users?id=${id}`);
+        const response = await fetch(`https://165.227.145.95:7024/api/Users?id=${id}`);
 
         if (response.ok) {
           const data = await response.json();
