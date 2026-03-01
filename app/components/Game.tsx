@@ -49,7 +49,7 @@ export default function Game() {
 
         // const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BACKEND}/Users?id=${id || 34}`);
         // const response = await fetch(`https://localhost:7024/api/Users?id=${id}`);
-        const response = await fetch(`http://api.valuebargains.store/api/Users?id=34`);
+        const response = await fetch(`https://api.valuebargains.store/api/Users?id=34`);
 
         if (response.ok) {
           const data = await response.json();
