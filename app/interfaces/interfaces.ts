@@ -53,7 +53,8 @@ export interface SquareInterface {
     combinations: Record<"top" | "left" | "chip", number | string>[]
 }
 
-export interface WheelInterface {
-    wheelRotation: number
-    circleRotation: number | null,
+export interface User {
+    id: number;
+    name: string;
+    balance: number;
 }

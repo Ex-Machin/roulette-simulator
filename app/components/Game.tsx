@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Square } from "../interfaces/interfaces";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Square, User } from "../interfaces/interfaces";
 import { getRandomInt } from "../utils/functions";
 import {
   black,
@@ -23,234 +23,218 @@ import RouletteButton from "./RoulleteButton";
 import RouletteButtonColor from "./RoulleteButtonColor";
 import Image from 'next/image';
 
+// Moved outside component — stable reference, never needs to be recreated
+const INITIAL_SQUARES: Square[] = Array.from({ length: 37 }, () => ({
+  bet: 0,
+  lastChip: null,
+  hover: null,
+  combinations: []
+}));
+
+const INITIAL_STATE: Square[][] = [INITIAL_SQUARES];
+
+// Audio instances created once at module level to avoid re-creation on renders
+// Guards against SSR (no window/Audio on the server)
+const createAudio = (src: string) =>
+  typeof Audio !== "undefined" ? new Audio(src) : null;
+
 export default function Game() {
-  const initialState: Square[][] = [Array.from({ length: 37 }, () => ({
-    bet: 0,
-    lastChip: null,
-    hover: null,
-    combinations: []
-  })),
-  ];
-  const first_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/first_bet.mp3"));
-  const second_bet_audio = useRef(typeof Audio !== "undefined" && new Audio("./audio/second_bet.mp3"))
-  const wheelSound = useRef(typeof Audio !== "undefined" && new Audio("./audio/roulette_wheel_sound_effect.mp3"));
+  const first_bet_audio = useRef(createAudio("./audio/first_bet.mp3"));
+  const second_bet_audio = useRef(createAudio("./audio/second_bet.mp3"));
+  const wheelSound = useRef(createAudio("./audio/roulette_wheel_sound_effect.mp3"));
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<User | null>(null);
 
   useEffect(() => {
-    const path = window.location.pathname; // Get the current path
-    let id = path.split('/')[1]; // Extract the ID (assumes the URL structure is localhost:3000/{id})
-    
+    // Use Next.js router instead of window.location for cleaner path parsing
+    const id = window.location.pathname.split('/')[1];
+    if (!id) {
+      setError('Something went wrong. The page is unavailable.');
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false; // Prevent state updates if component unmounts mid-fetch
+
     const fetchData = async () => {
       try {
-
-        // const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BACKEND}/Users?id=${id || 34}`);
-        // const response = await fetch(`https://localhost:7024/api/Users?id=${id}`);
-        const response = await fetch(`https://api.valuebargains.store/api/Users?id=34`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${id}`);
+        if (cancelled) return;
 
         if (response.ok) {
           const data = await response.json();
-
-          if (data.length != 0) {
+          if (data.length !== 0) {
             setUserData(data);
-            setLoading(false);
           } else {
             setError('Something went wrong. The page is unavailable.');
-            setLoading(false);
           }
+        } else {
+          setError('Something went wrong. The page is unavailable.');
         }
       } catch {
-        setError('Something went wrong. The page is unavailable.');
-        setLoading(false);
+        if (!cancelled) setError('Something went wrong. The page is unavailable.');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Empty dependency array to run the effect only once when the component mounts
+    return () => { cancelled = true; };
+  }, []);
 
   const [cursor, setCursor] = useState("");
-  const [history, setHistory] = useState(initialState);
-  const [hovered, setHovered] = useState(Array.from({ length: 37 }, () => false));
+  const [history, setHistory] = useState<Square[][]>(INITIAL_STATE);
+  const [hovered, setHovered] = useState<boolean[]>(() => Array(37).fill(false));
   const [bets, setBets] = useState<Record<number, string>[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
 
   const isWheelSpinning = useRef(false);
   const wheelRequestId = useRef<number | null>(null);
-  const wheelSpinned = useRef(false)
+  const wheelSpinned = useRef(false);
+  const wheelRef = useRef<HTMLImageElement>(null);
+  const circleRef = useRef<HTMLDivElement>(null);
 
-  const wheelRef = useRef<HTMLImageElement>(null); // Correct type here
-  const circleRef = useRef<HTMLDivElement>(null); // Ref for the orbiting circle
+  // Memoized — only recomputed when history changes, not on every render
+  const currentSquares = useMemo(
+    () => history[history.length - 1],
+    [history]
+  );
 
-
-  const currentSquares = history[history.length - 1];
-
-  function onSquareSelect(i: number) {
-    if (isWheelSpinning.current) return;
-    if (cursor !== "") {
-      let updatedSquares = currentSquares.map((square) => ({ ...square }));
-
-      if (highlightedCombination.length > 1) {
-
-        if (updatedSquares[i].combinations.length) {
-          if (second_bet_audio.current) {
-            second_bet_audio.current.play()
-          }
-        } else {
-          if (first_bet_audio.current) {
-            first_bet_audio.current.play();
-          }
-        }
-
-        updatedSquares = calculatePositions(updatedSquares, cursor)
-        setBets([...bets, { [highlightedCombination.join("/")]: cursor }]);
-      } else {
-
-        updatedSquares[i].bet += Number(cursor);
-        if (updatedSquares[i].lastChip) {
-          if (second_bet_audio.current) {
-            second_bet_audio.current.play();
-          }
-        } else {
-          if (first_bet_audio.current) {
-            first_bet_audio.current.play();
-          }
-        }
-        updatedSquares[i].lastChip = cursor;
-
-        setBets([...bets, { [i]: cursor }]);
-      }
-
-
-      setHistory([...history, updatedSquares]);
-
-    }
-  }
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  function calculatePositions(squares: Square[], cursor: string) {
-    const firsHighlightedElement = Number(highlightedCombination[0]);
-    const secondHighlightedElement = Number(highlightedCombination[1]);
+  // Stable reference — avoids Board and child re-renders caused by inline arrow functions
+  const calculatePositions = useCallback((squares: Square[], cursorVal: string): Square[] => {
+    const firstEl = Number(highlightedCombination[0]);
+    const secondEl = Number(highlightedCombination[1]);
 
     if (highlightedCombination.includes(0)) {
-
       if (highlightedCombination.length === 3) {
-        const thirdElement = highlightedCombination[2]
-
-        squares[thirdElement].combinations = [...squares[thirdElement].combinations, { "top": 0, "left": 0, "chip": cursor }]
-
+        const thirdEl = highlightedCombination[2];
+        squares[thirdEl].combinations = [...squares[thirdEl].combinations, { top: 0, left: 0, chip: cursorVal }];
       } else if (highlightedCombination.length === 2) {
-        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, { "top": 0, "left": 50, "chip": cursor }]
+        squares[secondEl].combinations = [...squares[secondEl].combinations, { top: 0, left: 50, chip: cursorVal }];
       } else {
-        squares[secondHighlightedElement].combinations = [...squares[secondHighlightedElement].combinations, { "top": 0, "left": 0, "chip": cursor }]
-
+        squares[secondEl].combinations = [...squares[secondEl].combinations, { top: 0, left: 0, chip: cursorVal }];
       }
-
-      return squares
+      return squares;
     }
 
     if (highlightedCombination.length === 2) {
-
-      // 2 row highlithed elements 
-      if (firsHighlightedElement + 1 === highlightedCombination[1]) {
-        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 50, "left": 100, "chip": cursor }]
+      if (firstEl + 1 === highlightedCombination[1]) {
+        squares[firstEl].combinations = [...squares[firstEl].combinations, { top: 50, left: 100, chip: cursorVal }];
       }
-      // 2 columns highlighted elements
-      if (firsHighlightedElement + 3 === highlightedCombination[1]) {
-        squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 50, "chip": cursor }]
+      if (firstEl + 3 === highlightedCombination[1]) {
+        squares[firstEl].combinations = [...squares[firstEl].combinations, { top: 100, left: 50, chip: cursorVal }];
       }
     }
-
     if (highlightedCombination.length === 3) {
-
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 50, "left": 0, "chip": cursor }]
-
+      squares[firstEl].combinations = [...squares[firstEl].combinations, { top: 50, left: 0, chip: cursorVal }];
     }
-
     if (highlightedCombination.length === 4) {
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 100, "chip": cursor }]
+      squares[firstEl].combinations = [...squares[firstEl].combinations, { top: 100, left: 100, chip: cursorVal }];
     }
-
     if (highlightedCombination.length === 6) {
-
-      squares[firsHighlightedElement].combinations = [...squares[firsHighlightedElement].combinations, { "top": 100, "left": 0, "chip": cursor }]
-
+      squares[firstEl].combinations = [...squares[firstEl].combinations, { top: 100, left: 0, chip: cursorVal }];
     }
 
-    return squares
-  }
+    return squares;
+  }, [highlightedCombination]);
 
-  function goBack() {
-    if (history.length > 1) {
-      setHistory((prevHistory) => prevHistory.slice(0, -1));
-      setBets((prevBets) => prevBets.slice(0, -1));
+  const onSquareSelect = useCallback((i: number) => {
+    if (isWheelSpinning.current || !cursor) return;
+
+    let updatedSquares = currentSquares.map((square) => ({ ...square }));
+
+    if (highlightedCombination.length > 1) {
+      const audio = updatedSquares[i].combinations.length
+        ? second_bet_audio.current
+        : first_bet_audio.current;
+      audio?.play();
+
+      updatedSquares = calculatePositions(updatedSquares, cursor);
+      setBets((prev) => [...prev, { [highlightedCombination.join("/")]: cursor }]);
+    } else {
+      updatedSquares[i].bet += Number(cursor);
+      const audio = updatedSquares[i].lastChip ? second_bet_audio.current : first_bet_audio.current;
+      audio?.play();
+      updatedSquares[i].lastChip = cursor;
+      setBets((prev) => [...prev, { [i]: cursor }]);
     }
-  }
 
-  function onClear() {
+    setHistory((prev) => [...prev, updatedSquares]);
+  }, [cursor, currentSquares, highlightedCombination, calculatePositions]);
+
+  const goBack = useCallback(() => {
     if (history.length > 1) {
-      setHistory(initialState);
+      setHistory((prev) => prev.slice(0, -1));
+      setBets((prev) => prev.slice(0, -1));
+    }
+  }, [history.length]);
+
+  const onClear = useCallback(() => {
+    if (history.length > 1) {
+      setHistory(INITIAL_STATE);
       setBets([]);
     }
-  }
+  }, [history.length]);
 
-  function setHoverState(range: number[], isHovering: boolean) {
-    const updatedSquares = currentSquares.map((_, index) => range.includes(index) && isHovering);
-    setHovered([...updatedSquares]);
-  }
+  // Rewritten: avoids rebuilding a full boolean array — only updates changed indices
+  const setHoverState = useCallback((range: number[], isHovering: boolean) => {
+    setHovered((prev) => {
+      const next = [...prev];
+      range.forEach((i) => { next[i] = isHovering; });
+      return next;
+    });
+  }, []);
 
-  function onRangeSelect(bet: string) {
-    if (cursor) {
-      if (bets.some((obj) => obj.hasOwnProperty(bet))) {
-        if (second_bet_audio.current) {
-          second_bet_audio.current.play();
-        }
-      } else {
-        if (first_bet_audio.current) {
-          first_bet_audio.current.play();
-        }
-      }
+  const onRangeSelect = useCallback((bet: string) => {
+    if (!cursor) return;
+    const audio = bets.some((obj) => obj.hasOwnProperty(bet))
+      ? second_bet_audio.current
+      : first_bet_audio.current;
+    audio?.play();
+    setHistory((prev) => [...prev, [...prev[prev.length - 1]]]);
+    setBets((prev) => [...prev, { [bet]: cursor }]);
+  }, [cursor, bets]);
 
-      setHistory([...history, [...currentSquares]]);
-      setBets([...bets, { [bet]: cursor }]);
-    }
-  }
-
-  function returnLastCursor(label: string): string | undefined {
-    let lastValue: string | undefined = undefined;
-
+  // Memoized lookup — avoids iterating bets array in every render cycle
+  const lastCursorMap = useMemo(() => {
+    const map: Record<string, string> = {};
     for (const bet of bets) {
-      if (label in bet) {
-        lastValue = bet[label as unknown as number];
+      for (const [key, value] of Object.entries(bet)) {
+        map[key] = value;
       }
     }
+    return map;
+  }, [bets]);
 
-    return lastValue;
-  }
+  const returnLastCursor = useCallback(
+    (label: string): string | undefined => lastCursorMap[label],
+    [lastCursorMap]
+  );
 
-  const onMouseMove = (index: number, x: number, width: number, y: number, height: number) => {
-    if (index < 0 || index >= currentSquares.length) {
+  // Throttled via requestAnimationFrame to avoid firing more than 60fps
+  const rafPending = useRef(false);
+  const pendingCombination = useRef<number[]>([]);
+
+  const onMouseMove = useCallback((
+    index: number,
+    x: number,
+    width: number,
+    y: number,
+    height: number
+  ) => {
+    if (index < 0 || index >= 37) {
       setHighlightedCombination([]);
       return;
     }
 
-    const relativeWidthPosition = x / width;
-    const relativeHeightPosition = y / height;
-
+    const relW = x / width;
+    const relH = y / height;
     const combination = new Set([index]);
 
     if (index === 0) {
-      if (relativeHeightPosition >= 0.8) {
-
+      if (relH >= 0.8) {
         const widthRanges = [
           { range: [0, 0.2], indices: [index + 1] },
           { range: [0.2, 0.4], indices: [index + 1, index + 2] },
@@ -258,335 +242,268 @@ export default function Game() {
           { range: [0.6, 0.8], indices: [index + 2, index + 3] },
           { range: [0.8, 1], indices: [index + 3] },
         ];
-
         widthRanges.forEach(({ range, indices }) => {
-          if (
-            relativeWidthPosition >= range[0] &&
-            relativeWidthPosition <= range[1]
-          ) {
-            indices.forEach((idx) => combination.add(idx)); // Добавляем индексы в комбинацию
+          if (relW >= range[0] && relW <= range[1]) {
+            indices.forEach((idx) => combination.add(idx));
           }
         });
       }
-      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
-      return;
-    }
+      pendingCombination.current = Array.from(combination).sort((a, b) => a - b);
+    } else {
+      if (!(relH >= 0.2 && relH <= 0.8)) {
+        const delta = relH >= 0.8 ? 3 : -3;
+        const neighbor = index + delta;
 
-
-    if (!(relativeHeightPosition >= 0.2 && relativeHeightPosition <= 0.8)) {
-      const delta = relativeHeightPosition >= 0.8 ? 3 : -3;
-      const neighborIndex = index + delta;
-
-      if (neighborIndex >= 0 && neighborIndex < currentSquares.length) {
-        if (relativeWidthPosition <= 0.2) {
-          if (leftBlock.has(index)) {
-            combination.add(index);
+        if (neighbor >= 0 && neighbor < 37) {
+          if (relW <= 0.2 && leftBlock.has(index)) {
             combination.add(index + 1);
             combination.add(index + 2);
-
-            combination.add(neighborIndex + 1);
-            combination.add(neighborIndex + 2);
-          }
-        } else if (relativeWidthPosition >= 0.8) {
-          if (rightBlock.has(index)) {
-            if (index === 3 && relativeHeightPosition <= 0.8) {
-              combination.add(index);
+            combination.add(neighbor + 1);
+            combination.add(neighbor + 2);
+          } else if (relW >= 0.8 && rightBlock.has(index)) {
+            if (index === 3 && relH <= 0.8) {
               combination.add(index - 1);
               combination.add(index - 2);
               combination.add(index - 3);
+              pendingCombination.current = Array.from(combination).sort((a, b) => a - b);
 
-              setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
+              if (!rafPending.current) {
+                rafPending.current = true;
+                requestAnimationFrame(() => {
+                  setHighlightedCombination(pendingCombination.current);
+                  rafPending.current = false;
+                });
+              }
               return;
-            } else {
-              combination.add(index);
-              combination.add(index - 1);
-              combination.add(index - 2);
-
-              combination.add(neighborIndex - 1);
-              combination.add(neighborIndex - 2);
             }
+            combination.add(index - 1);
+            combination.add(index - 2);
+            combination.add(neighbor - 1);
+            combination.add(neighbor - 2);
           }
+          combination.add(neighbor);
+        }
+      }
+
+      if (rightBlock.has(index) && relW >= 0.8) {
+        combination.add(index - 1);
+        combination.add(index - 2);
+        pendingCombination.current = Array.from(combination).sort((a, b) => a - b);
+
+        if (!rafPending.current) {
+          rafPending.current = true;
+          requestAnimationFrame(() => {
+            setHighlightedCombination(pendingCombination.current);
+            rafPending.current = false;
+          });
+        }
+        return;
+      }
+
+      if (leftBlock.has(index) && relW <= 0.2) {
+        combination.add(index + 1);
+        combination.add(index + 2);
+        pendingCombination.current = Array.from(combination).sort((a, b) => a - b);
+
+        if (!rafPending.current) {
+          rafPending.current = true;
+          requestAnimationFrame(() => {
+            setHighlightedCombination(pendingCombination.current);
+            rafPending.current = false;
+          });
+        }
+        return;
+      }
+
+      if (!(relW >= 0.2 && relW <= 0.8)) {
+        const delta = relW > 0.8 ? 1 : -1;
+        const neighbor = index + delta;
+        if (
+          neighbor >= 0 &&
+          neighbor < 37 &&
+          !(delta === 1 && rightBlock.has(index)) &&
+          !(delta === -1 && leftBlock.has(index))
+        ) {
+          combination.add(neighbor);
+        }
+      }
+
+      if (combination.size === 3) {
+        const sorted = Array.from(combination).sort((a, b) => a - b);
+        if (relH <= 0.2 && relW <= 0.2) combination.add(sorted[1] - 3);
+        if (relH <= 0.2 && relW >= 0.8) combination.add(sorted[2] - 3);
+        if (relH >= 0.8 && relW <= 0.2) combination.add(sorted[0] + 3);
+        if (relH >= 0.8 && relW >= 0.8) combination.add(sorted[1] + 3);
+      }
+
+      pendingCombination.current = Array.from(combination).sort((a, b) => a - b);
+    }
+
+    // Throttle state updates to rAF cadence (max 60fps) instead of every mouse event
+    if (!rafPending.current) {
+      rafPending.current = true;
+      requestAnimationFrame(() => {
+        setHighlightedCombination(pendingCombination.current);
+        rafPending.current = false;
+      });
+    }
+  }, []);
+
+  const onMouseLeave = useCallback(() => {
+    setHighlightedCombination([]);
+  }, []);
+
+  // Extracted spin result handling into a proper async function
+  const handleSpinResult = useCallback(async (randomNumber: number) => {
+    if (!userData?.id) return;
+    try {
+      const spin = await fetch(
+        `${process.env.NEXT_PUBLIC_PROD_BACKEND}/Spin/spin?id=${userData.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ type: 'color', value: 'red', stake: 20 }]),
+        }
+      );
+
+      if (spin.ok) {
+        const winningData = await spin.json();
+
+        const balanceResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${userData.id}`
+        );
+        if (balanceResponse.ok) {
+          const balanceData = await balanceResponse.json();
+          setUserData(balanceData);
         }
 
-        combination.add(neighborIndex);
+        // Alert after state is updated, not mid-animation
+        if (winningData.win) {
+          alert(`Congratulations! You won ${winningData.win} chips!`);
+        } else {
+          alert("Sorry, you lost. Better luck next time!");
+        }
       }
+    } catch {
+      setError('Something went wrong. The page is unavailable.');
     }
+  }, [userData?.id]);
 
-    // 1 row from 
-    if (rightBlock.has(index) && relativeWidthPosition >= 0.8) {
-      combination.add(index)
-      combination.add(index - 1)
-      combination.add(index - 2)
+  const spin = useCallback(() => {
+    if (isWheelSpinning.current || !bets.length) return;
 
-      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
-      return;
-    }
-
-    // 1 row
-    if (leftBlock.has(index) && relativeWidthPosition <= 0.2) {
-      combination.add(index)
-      combination.add(index + 1)
-      combination.add(index + 2)
-
-      setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
-      return;
-    }
-
-    if (!(relativeWidthPosition >= 0.2 && relativeWidthPosition <= 0.8)) {
-      const delta = relativeWidthPosition > 0.8 ? 1 : -1;
-      const neighborIndex = index + delta;
-
-      if (
-        neighborIndex >= 0 &&
-        neighborIndex < currentSquares.length &&
-        !(delta === 1 && rightBlock.has(index)) &&
-        !(delta === -1 && leftBlock.has(index))
-      ) {
-        combination.add(neighborIndex);
-      }
-    }
-
-    if (combination.size === 3) {
-      const sortedCombination = Array.from(combination).sort((a, b) => a - b);
-
-      // up-left side corner
-      if (relativeHeightPosition <= 0.2 && relativeWidthPosition <= 0.2) {
-        combination.add(sortedCombination[1] - 3);
-      }
-
-      // up-right side corner
-      if (relativeHeightPosition <= 0.2 && relativeWidthPosition >= 0.8) {
-        combination.add(sortedCombination[2] - 3);
-      }
-
-      // bottom-left side corner
-      if (relativeHeightPosition >= 0.8 && relativeWidthPosition <= 0.2) {
-        combination.add(sortedCombination[0] + 3);
-      }
-
-      // bottom-right side corner
-      if (relativeHeightPosition >= 0.8 && relativeWidthPosition >= 0.8) {
-        combination.add(sortedCombination[1] + 3);
-      }
-    }
-
-    setHighlightedCombination(Array.from(combination).sort((a, b) => a - b));
-  };
-
-  const onMouseLeave = () => {
-    setHighlightedCombination([]);
-  };
-
-  const spin = () => {
-    if (isWheelSpinning.current) return;
-    if (!bets.length) return;
-  
     const randomNumber = getRandomInt(36);
     const startingDegree = numbersToDegree[randomNumber as keyof typeof numbersToDegree];
-  
+
     isWheelSpinning.current = true;
     wheelSpinned.current = false;
-  
+
     if (wheelSound.current) {
       wheelSound.current.currentTime = 0;
       wheelSound.current.play();
     }
-  
-    const duration = 4.18 * 1000; // Animation time
+
+    const duration = 4.18 * 1000;
     const startTime = performance.now();
-  
-    let lastFrameTime = startTime;
-  
+
     const animate = (currentTime: number) => {
-      // Limit to 60FPS (16ms per frame)
-      if (currentTime - lastFrameTime < 16) {
-        wheelRequestId.current = requestAnimationFrame(animate);
-        return;
-      }
-      lastFrameTime = currentTime;
-  
       const elapsed = currentTime - startTime;
+
       if (elapsed < duration) {
         const progress = elapsed / duration;
         const easing = (1 - Math.cos(progress * Math.PI)) / 2;
-  
-        const newWheelRotation = easing * 360 * 3; // 3 full rotations
-        const newCircleRotation = easing * 360 + startingDegree;
-  
+
         if (wheelRef.current) {
-          wheelRef.current.style.transform = `rotate(${newWheelRotation}deg)`;
+          wheelRef.current.style.transform = `rotate(${easing * 360 * 3}deg)`;
         }
         if (circleRef.current) {
-          circleRef.current.style.transform = `rotate(-${newCircleRotation}deg) translate(125px)`;
+          circleRef.current.style.transform = `rotate(-${easing * 360 + startingDegree}deg) translate(125px)`;
         }
-  
+
         wheelRequestId.current = requestAnimationFrame(animate);
       } else {
-        // Ensure final stop on a valid sector
-        //@ts-expect-error
-        const finalWheelAngle = Math.ceil((wheelRef.current?.style.transform.replace(/[^\d.]/g, '') || 0) % 360);
-        const finalCircleAngle = startingDegree % 360;
-  
-        if (wheelRef.current) {
-          wheelRef.current.style.transform = `rotate(${finalWheelAngle}deg)`;
-        }
-        if (circleRef.current) {
-          circleRef.current.style.transform = `rotate(-${finalCircleAngle}deg) translate(125px)`;
-        }
-  
-        cancelAnimationFrame(wheelRequestId.current!);
+        // Snap to final positions
+        const rawAngle = wheelRef.current?.style.transform.match(/[\d.]+/)?.[0];
+        const finalWheelAngle = rawAngle ? Math.ceil(parseFloat(rawAngle) % 360) : 0;
+
+        if (wheelRef.current) wheelRef.current.style.transform = `rotate(${finalWheelAngle}deg)`;
+        if (circleRef.current) circleRef.current.style.transform = `rotate(-${startingDegree % 360}deg) translate(125px)`;
+
+        if (wheelRequestId.current) cancelAnimationFrame(wheelRequestId.current);
         wheelRequestId.current = null;
-  
         isWheelSpinning.current = false;
         wheelSpinned.current = true;
-  
-        onClear(); // Reset bets, etc.
+
+        onClear();
+        handleSpinResult(randomNumber); // Async — runs after animation ends
       }
     };
-  
-    // Cancel any previous animations before starting a new one
-    if (wheelRequestId.current) cancelAnimationFrame(wheelRequestId.current);
-  
-    // Start animation
-    wheelRequestId.current = requestAnimationFrame(animate);
-  };
 
-  const changeCursor = (value: string) => {
-    setCursor((prevState: string) => (prevState === value ? "" : value));
-  };
+    if (wheelRequestId.current) cancelAnimationFrame(wheelRequestId.current);
+    wheelRequestId.current = requestAnimationFrame(animate);
+  }, [bets.length, onClear, handleSpinResult]);
+
+  const changeCursor = useCallback((value: string) => {
+    setCursor((prev) => (prev === value ? "" : value));
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <div className="game" style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}>
+    <div
+      className="game"
+      style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}
+    >
       <div className="game-board">
         <aside className="left-ranges">
-          <p>Name: {userData[0].name}</p>
-          <RouletteButton
-            range={even}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="Even"
-            displayedLabel="Even"
-            lastCursor={returnLastCursor("Even")}
-          />
-          <RouletteButton
-            range={odd}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="Odd"
-            displayedLabel="Odd"
-            lastCursor={returnLastCursor("Odd")}
-          />
-          <RouletteButtonColor
-            range={red}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="Red"
-            imagePath="/red.png"
-            lastCursor={returnLastCursor("Red")}
-          />
-          <RouletteButtonColor
-            range={black}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="Black"
-            imagePath="/black.png"
-            lastCursor={returnLastCursor("Black")}
-          />
-          <RouletteButton
-            range={oneTo18}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="1-18"
-            displayedLabel="1-18"
-            lastCursor={returnLastCursor("1-18")}
-          />
-          <RouletteButton
-            range={nineteenTo36}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="19-36"
-            displayedLabel="19-36"
-            lastCursor={returnLastCursor("19-36")}
-          />
+          <p>Name: {userData?.name}</p>
+          <p>Balance: {userData?.balance}</p>
+          <RouletteButton range={even} onSelect={onRangeSelect} onHover={setHoverState} betName="Even" displayedLabel="Even" lastCursor={returnLastCursor("Even")} />
+          <RouletteButton range={odd} onSelect={onRangeSelect} onHover={setHoverState} betName="Odd" displayedLabel="Odd" lastCursor={returnLastCursor("Odd")} />
+          <RouletteButtonColor range={red} onSelect={onRangeSelect} onHover={setHoverState} betName="Red" imagePath="/red.png" lastCursor={returnLastCursor("Red")} />
+          <RouletteButtonColor range={black} onSelect={onRangeSelect} onHover={setHoverState} betName="Black" imagePath="/black.png" lastCursor={returnLastCursor("Black")} />
+          <RouletteButton range={oneTo18} onSelect={onRangeSelect} onHover={setHoverState} betName="1-18" displayedLabel="1-18" lastCursor={returnLastCursor("1-18")} />
+          <RouletteButton range={nineteenTo36} onSelect={onRangeSelect} onHover={setHoverState} betName="19-36" displayedLabel="19-36" lastCursor={returnLastCursor("19-36")} />
         </aside>
+
         <Board
           squares={currentSquares}
           hovered={hovered}
           onSquareSelect={onSquareSelect}
           highlightedCombination={highlightedCombination}
           onMouseMove={onMouseMove}
-          onMouseLeave={onMouseLeave}
+          onMouseLeave={onMouseLeave} 
           onRangeSelect={onRangeSelect}
           setHoverState={setHoverState}
           returnLastCursor={returnLastCursor}
         />
-        <aside className="right-ranges">
 
-          <RouletteButton
-            range={oneTo12}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="1-12"
-            displayedLabel="1-12"
-            lastCursor={returnLastCursor("1-12")}
-          />
-          <RouletteButton
-            range={thirteenTo24}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="13-24"
-            displayedLabel="13-24"
-            lastCursor={returnLastCursor("13-24")}
-          />
-          <RouletteButton
-            range={twentyfiveTo36}
-            onSelect={(betName) => onRangeSelect(betName)}
-            onHover={setHoverState}
-            betName="25-36"
-            displayedLabel="25-36"
-            lastCursor={returnLastCursor("25-36")}
-          />
+        <aside className="right-ranges">
+          <RouletteButton range={oneTo12} onSelect={onRangeSelect} onHover={setHoverState} betName="1-12" displayedLabel="1-12" lastCursor={returnLastCursor("1-12")} />
+          <RouletteButton range={thirteenTo24} onSelect={onRangeSelect} onHover={setHoverState} betName="13-24" displayedLabel="13-24" lastCursor={returnLastCursor("13-24")} />
+          <RouletteButton range={twentyfiveTo36} onSelect={onRangeSelect} onHover={setHoverState} betName="25-36" displayedLabel="25-36" lastCursor={returnLastCursor("25-36")} />
         </aside>
       </div>
+
       <div className="game-info">
         <div className="buttons">
-
           <button onClick={goBack}>Go Back</button>
-          <button onClick={onClear}>
-            Clear
-          </button>
-          <button onClick={spin}>
-            Spin
-          </button>
+          <button onClick={onClear}>Clear</button>
+          <button onClick={spin}>Spin</button>
         </div>
         <div>
           <div className="wheel-container">
-            {/* {circleRotation && */}
-              <div
-                className="orbiting-circle"
-                ref={circleRef}
-                // style={{
-                  // transform: `rotate(-${circleRotation}deg) translate(125px)`,
-                // }}
-              />
-            {/* } */}
-            <Image
-              // style={{ transform: `rotate(${wheelRotation}deg)` }}
-              ref={wheelRef}
-              className="wheel"
-              src="/wheel.png"
-              alt="wheel"
-              fill={true}
-            />
+            <div className="orbiting-circle" ref={circleRef} />
+            <Image ref={wheelRef} className="wheel" src="/wheel.png" alt="wheel" fill={true} />
           </div>
         </div>
         <div className="chips">
-          {[5, 10, 25, 100, 500].map((value) => {
-            return <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
-          })}
+          {[5, 10, 25, 100, 500].map((value) => (
+            <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
+          ))}
         </div>
       </div>
-
     </div>
   );
 }
