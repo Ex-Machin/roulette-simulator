@@ -21,12 +21,14 @@
 .game {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   background:
     radial-gradient(ellipse at center, #1e7a40 0%, #0f3d20 60%, #071a0e 100%);
   height: 100vh;
   overflow: hidden;
   font-family: 'Cinzel', serif;
   position: relative;
+  align-content: flex-start;
 }
 
 /* Felt texture overlay */
@@ -56,7 +58,25 @@
   z-index: 10;
 }
 
+/* ── Player info bar — always visible, sits above the board ── */
+.player-info-bar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 16px 4px;
+  color: var(--gold-light);
+  font-size: 12px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  flex-shrink: 0;
+}
+
 .game-board {
+  margin-left: 40%;
   display: flex;
   position: relative;
   z-index: 1;
@@ -277,16 +297,6 @@
   margin-top: 45px;
 }
 
-/* Player card */
-.left-ranges > p {
-  margin: 0 0 4px 4px;
-  color: var(--gold-light);
-  font-size: 11px;
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.05em;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-}
-
 .left-ranges .roullete-button-container {
   height: 90px;
   position: relative;
@@ -446,15 +456,13 @@
 
   /* ── Board section ── */
   .game-board {
-    flex-direction: column;
-    padding: 10px 8px 0;
+    margin-left: unset;
+    flex-direction: row;
+    padding: 8px 4px 0;
     width: 100%;
-    filter: none; /* drop-shadow too heavy on mobile */
-  }
-
-  /* Board itself fills full width */
-  .board-wrapper {
-    width: 100%;
+    filter: none;
+    align-items: flex-start;
+    justify-content: center;
   }
 
   /* Squares scale down to fit screen */
@@ -466,59 +474,57 @@
     font-size: 12px;
   }
 
-  /* ── Left ranges move BELOW the board as a horizontal row ── */
+  /* ── Left ranges — vertical sidebar on the left ── */
+  /* 6 buttons × 72px = 432px = 12 number rows × 36px  */
   .left-ranges {
-    margin-top: 0;
+    margin-top: 36px; /* skip the zero row */
     display: flex;
-    flex-direction: row;
-    width: 100%;
-    order: 2; /* render after board */
-  }
-
-  /* Player info sits above the board, not inside left-ranges column */
-  .left-ranges > p {
-    display: none; /* hidden here — shown in .player-info-mobile instead */
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 28px;
   }
 
   .left-ranges .roullete-button-container {
-    flex: 1;
-    height: 48px;
+    flex: none;
+    height: 72px; /* 432px / 6 buttons */
+    width: 28px;
   }
 
-  /* Reset vertical writing mode — buttons are now horizontal */
   .left-ranges .roullete-button {
-    writing-mode: horizontal-tb;
-    font-size: 10px;
-    letter-spacing: 0.03em;
-    border-radius: 0 !important; /* override first/last child radii */
+    writing-mode: vertical-rl;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    border-radius: 0 !important;
   }
 
   .left-ranges .roullete-button-container:first-child .roullete-button {
-    border-radius: 0 0 0 12px !important;
+    border-radius: 0 !important;
   }
 
   .left-ranges .roullete-button-container:last-child .roullete-button {
-    border-radius: 0 0 12px 0 !important;
+    border-radius: 0 !important;
   }
 
-  /* ── Right ranges also move below board as a horizontal row ── */
+  /* ── Right ranges — vertical sidebar on the right ── */
+  /* 3 buttons × 144px = 432px = 12 number rows × 36px */
   .right-ranges {
-    margin-top: 0;
+    margin-top: 36px; /* skip the zero row */
     display: flex;
-    flex-direction: row;
-    width: 100%;
-    order: 3;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 28px;
   }
 
   .right-ranges .roullete-button-container {
-    flex: 1;
-    height: 48px;
+    flex: none;
+    height: 144px; /* 432px / 3 buttons */
+    width: 28px;
   }
 
   .right-ranges .roullete-button {
-    writing-mode: horizontal-tb;
-    font-size: 10px;
-    letter-spacing: 0.03em;
+    writing-mode: vertical-rl;
+    font-size: 8px;
+    letter-spacing: 0.04em;
     border-radius: 0 !important;
   }
 
@@ -572,21 +578,9 @@
     align-self: stretch;
   }
 
-  /* ── Player info shown at the top on mobile ── */
-  .player-info-mobile {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px 12px 0;
-    color: var(--gold-light);
-    font-size: 12px;
-    font-family: 'Cinzel', serif;
-    letter-spacing: 0.05em;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  /* ── Player info bar on mobile ── */
+  .player-info-bar {
+    font-size: 11px;
+    padding: 10px 12px 6px;
   }
-}
-
-/* Hide mobile player info bar on desktop */
-.player-info-mobile {
-  display: none;
 }

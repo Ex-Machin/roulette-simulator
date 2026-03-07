@@ -411,12 +411,6 @@ export default function Game() {
       if (spin.ok) {
         const winningData = await spin.json();
 
-        // Don't await this — let it run in background, it doesn't affect the animation
-        fetch(`${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${userData.id}`)
-          .then(res => res.json())
-          .then(balanceData => setUserData(balanceData))
-          .catch(() => setError('Something went wrong. The page is unavailable.'));
-
         return winningData[0].rand;
       }
     } catch {
@@ -469,6 +463,12 @@ export default function Game() {
         isWheelSpinning.current = false;
         wheelSpinned.current = true;
 
+        // Don't await this — let it run in background, it doesn't affect the animation
+        fetch(`${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${userData?.id}`)
+          .then(res => res.json())
+          .then(balanceData => setUserData(balanceData))
+          .catch(() => setError('Something went wrong. The page is unavailable.'));
+        
         onClear();
       }
     };
@@ -489,14 +489,14 @@ export default function Game() {
       className="game"
       style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}
     >
-      <div className="player-info-mobile">
+      {/* Player info bar — visible on both desktop and mobile */}
+      <div className="player-info-bar">
         <span>Name: {userData?.name}</span>
         <span>Balance: {userData?.balance}</span>
       </div>
+
       <div className="game-board">
         <aside className="left-ranges">
-          <p>Name: {userData?.name}</p>
-          <p>Balance: {userData?.balance}</p>
           <RouletteButton range={even} onSelect={onRangeSelect} onHover={setHoverState} betName="Even" displayedLabel="Even" lastCursor={returnLastCursor("Even")} />
           <RouletteButton range={odd} onSelect={onRangeSelect} onHover={setHoverState} betName="Odd" displayedLabel="Odd" lastCursor={returnLastCursor("Odd")} />
           <RouletteButtonColor range={red} onSelect={onRangeSelect} onHover={setHoverState} betName="Red" imagePath="/red.png" lastCursor={returnLastCursor("Red")} />
