@@ -22,6 +22,7 @@ export interface BoardInterface {
 export interface ChipInterface {
     value: number;
     onCursorClick: MouseEventHandler<HTMLButtonElement>;
+    isSelected: boolean;
 }
 
 export interface RouletteButtonInterface {

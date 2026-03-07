@@ -439,6 +439,11 @@
   align-self: flex-start;
 }
 
+.chip img.selected {
+  transform: translateY(-5px);
+  transition: transform 0.15s ease;
+}
+
 /* ─────────────────────────────────────────
    MOBILE  (≤ 768px)
 ───────────────────────────────────────── */

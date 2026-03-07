@@ -468,7 +468,7 @@ export default function Game() {
           .then(res => res.json())
           .then(balanceData => setUserData(balanceData))
           .catch(() => setError('Something went wrong. The page is unavailable.'));
-        
+
         onClear();
       }
     };
@@ -538,7 +538,12 @@ export default function Game() {
         </div>
         <div className="chips">
           {[5, 10, 25, 100, 500].map((value) => (
-            <Chip key={value} value={value} onCursorClick={() => changeCursor(value.toString())} />
+            <Chip
+              key={value}
+              value={value}
+              onCursorClick={() => changeCursor(value.toString())}
+              isSelected={cursor === value.toString()}
+            />
           ))}
         </div>
       </div>
