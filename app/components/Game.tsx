@@ -87,7 +87,7 @@ export default function Game() {
   const [cursor, setCursor] = useState("");
   const [history, setHistory] = useState<Square[][]>(INITIAL_STATE);
   const [hovered, setHovered] = useState<boolean[]>(() => Array(37).fill(false));
-  const [bets, setBets] = useState<Record<number, string>[]>([]);
+  const [bets, setBets] = useState<{ type: string; value: string; stake: number }[]>([]);
   const [highlightedCombination, setHighlightedCombination] = useState<number[]>([]);
 
   const isWheelSpinning = useRef(false);
@@ -140,6 +140,30 @@ export default function Game() {
     return squares;
   }, [highlightedCombination]);
 
+  function convertBet(key: string, cursor: string): { type: string; value: string; stake: number } {
+    const stake = Number(cursor);
+
+    const rangeMap: Record<string, { type: string; value: string }> = {
+      "Red": { type: "color", value: "red" },
+      "Black": { type: "color", value: "black" },
+      "Even": { type: "even", value: "true" },
+      "Odd": { type: "even", value: "false" },
+      "1-18": { type: "rank", value: "1/18" },
+      "19-36": { type: "rank", value: "19/36" },
+      "1-12": { type: "sequence", value: "1/12" },
+      "13-24": { type: "sequence", value: "13/24" },
+      "25-36": { type: "sequence", value: "25/36" },
+    };
+
+    if (rangeMap[key]) return { ...rangeMap[key], stake };
+
+    // Combination bet (e.g. "1/2/4/5")
+    if (key.includes("/")) return { type: "numberSet", value: key, stake };
+
+    // Single number
+    return { type: "number", value: key, stake };
+  }
+
   const onSquareSelect = useCallback((i: number) => {
     if (isWheelSpinning.current || !cursor) return;
 
@@ -149,16 +173,22 @@ export default function Game() {
       const audio = updatedSquares[i].combinations.length
         ? second_bet_audio.current
         : first_bet_audio.current;
-      audio?.play();
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
 
       updatedSquares = calculatePositions(updatedSquares, cursor);
-      setBets((prev) => [...prev, { [highlightedCombination.join("/")]: cursor }]);
+      setBets((prev) => [...prev, convertBet(highlightedCombination.join("/"), cursor)]);
     } else {
       updatedSquares[i].bet += Number(cursor);
       const audio = updatedSquares[i].lastChip ? second_bet_audio.current : first_bet_audio.current;
-      audio?.play();
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
       updatedSquares[i].lastChip = cursor;
-      setBets((prev) => [...prev, { [i]: cursor }]);
+      setBets((prev) => [...prev, convertBet(String(i), cursor)]);
     }
 
     setHistory((prev) => [...prev, updatedSquares]);
@@ -194,16 +224,27 @@ export default function Game() {
       : first_bet_audio.current;
     audio?.play();
     setHistory((prev) => [...prev, [...prev[prev.length - 1]]]);
-    setBets((prev) => [...prev, { [bet]: cursor }]);
+    setBets((prev) => [...prev, convertBet(bet, cursor)]);
   }, [cursor, bets]);
 
   // Memoized lookup — avoids iterating bets array in every render cycle
   const lastCursorMap = useMemo(() => {
     const map: Record<string, string> = {};
+    const reverseMap: Record<string, string> = {
+      "red": "Red",
+      "black": "Black",
+      "true": "Even",
+      "false": "Odd",
+      "1/18": "1-18",
+      "19/36": "19-36",
+      "1/12": "1-12",
+      "13/24": "13-24",
+      "25/36": "25-36",
+    };
+
     for (const bet of bets) {
-      for (const [key, value] of Object.entries(bet)) {
-        map[key] = value;
-      }
+      const frontendKey = reverseMap[bet.value] ?? bet.value;
+      map[frontendKey] = String(bet.stake);
     }
     return map;
   }, [bets]);
@@ -354,46 +395,40 @@ export default function Game() {
   }, []);
 
   // Extracted spin result handling into a proper async function
-  const handleSpinResult = useCallback(async (randomNumber: number) => {
+  const handleSpinResult = useCallback(async () => {
     if (!userData?.id) return;
+
     try {
       const spin = await fetch(
         `${process.env.NEXT_PUBLIC_PROD_BACKEND}/Spin/spin?id=${userData.id}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ type: 'color', value: 'red', stake: 20 }]),
+          body: JSON.stringify(bets),
         }
       );
 
       if (spin.ok) {
         const winningData = await spin.json();
 
-        const balanceResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${userData.id}`
-        );
-        if (balanceResponse.ok) {
-          const balanceData = await balanceResponse.json();
-          setUserData(balanceData);
-        }
+        // Don't await this — let it run in background, it doesn't affect the animation
+        fetch(`${process.env.NEXT_PUBLIC_PROD_BACKEND}/Balance/${userData.id}`)
+          .then(res => res.json())
+          .then(balanceData => setUserData(balanceData))
+          .catch(() => setError('Something went wrong. The page is unavailable.'));
 
-        // Alert after state is updated, not mid-animation
-        if (winningData.win) {
-          alert(`Congratulations! You won ${winningData.win} chips!`);
-        } else {
-          alert("Sorry, you lost. Better luck next time!");
-        }
+        return winningData[0].rand;
       }
     } catch {
       setError('Something went wrong. The page is unavailable.');
     }
-  }, [userData?.id]);
+  }, [userData?.id, bets]);
 
-  const spin = useCallback(() => {
+  const spin = useCallback(async () => {
     if (isWheelSpinning.current || !bets.length) return;
 
-    const randomNumber = getRandomInt(36);
-    const startingDegree = numbersToDegree[randomNumber as keyof typeof numbersToDegree];
+    const randomNumber = await handleSpinResult();
+    const startingDegree = numbersToDegree[randomNumber as unknown as keyof typeof numbersToDegree];
 
     isWheelSpinning.current = true;
     wheelSpinned.current = false;
@@ -435,7 +470,6 @@ export default function Game() {
         wheelSpinned.current = true;
 
         onClear();
-        handleSpinResult(randomNumber); // Async — runs after animation ends
       }
     };
 
@@ -455,6 +489,10 @@ export default function Game() {
       className="game"
       style={{ cursor: cursor ? `url(./cursors/${cursor}.png) 10 10, auto` : "auto" }}
     >
+      <div className="player-info-mobile">
+        <span>Name: {userData?.name}</span>
+        <span>Balance: {userData?.balance}</span>
+      </div>
       <div className="game-board">
         <aside className="left-ranges">
           <p>Name: {userData?.name}</p>
@@ -473,7 +511,7 @@ export default function Game() {
           onSquareSelect={onSquareSelect}
           highlightedCombination={highlightedCombination}
           onMouseMove={onMouseMove}
-          onMouseLeave={onMouseLeave} 
+          onMouseLeave={onMouseLeave}
           onRangeSelect={onRangeSelect}
           setHoverState={setHoverState}
           returnLastCursor={returnLastCursor}

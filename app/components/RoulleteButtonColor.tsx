@@ -13,7 +13,7 @@ export default function RouletteButtonColor({ range, onSelect, onHover, imagePat
                 <Image src={imagePath} alt="roullete-image-button" width={40} height={40} />
             </button>
             {lastCursor &&
-                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  fill={true}/>
+                <Image src={`/cursors/${lastCursor}.png`} alt="chip_icon" className='chip_icon'  width={40} height={40}/>
             }
         </div>
     )

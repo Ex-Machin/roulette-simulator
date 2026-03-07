@@ -1,23 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --gold-light: #e8d48b;
+  --gold-dark: #8a6a1f;
+  --felt-green: #1a6b3a;
+  --felt-dark: #0f3d20;
+  --felt-shadow: #0a2712;
+  --red: #c0202e;
+  --red-hover: #e04050;
+  --black-hover: #555;
+  --text-light: #f0e6c8;
+  --border-gold: 2px solid var(--gold);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 .game {
   display: flex;
   flex-direction: row;
-  background: url("./../../public/background.jpg") 0 0 no-repeat;
-  background-size: 100% 100%;
+  background:
+    radial-gradient(ellipse at center, #1e7a40 0%, #0f3d20 60%, #071a0e 100%);
   height: 100vh;
   overflow: hidden;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Cinzel', serif;
+  position: relative;
+}
+
+/* Felt texture overlay */
+.game::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(0,0,0,0.03) 0px,
+      rgba(0,0,0,0.03) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Gold border trim at top */
+.game::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+  z-index: 10;
 }
 
 .game-board {
   display: flex;
+  position: relative;
+  z-index: 1;
+  padding: 12px 0 12px 12px;
+  align-items: flex-start;
+  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.6));
 }
 
+/* ── Squares ── */
 .square {
   position: relative;
   width: 33%;
   height: 45px;
 }
 
+.square_button {
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  float: left;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Cinzel', serif;
+  line-height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  text-align: center;
+  color: var(--text-light);
+  cursor: inherit;
+  background-color: var(--felt-green);
+  width: 100%;
+  height: 100%;
+  transition: background-color 0.15s, box-shadow 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.square_button:hover {
+  box-shadow: inset 0 0 12px rgba(201, 168, 76, 0.3);
+}
+
+.square_button.green {
+  width: 99%;
+  background-color: transparent;
+  border-radius: 50% 50% 0 0;
+}
+
+.square_button.green.hover {
+  background-color: rgba(201, 168, 76, 0.2);
+}
+
+.square_button.red {
+  background-color: var(--red);
+}
+.square_button.red:hover,
+.square_button.red.hover {
+  background-color: var(--red-hover);
+  box-shadow: inset 0 0 12px rgba(255,100,100,0.3);
+}
+
+.square_button.black {
+  background-color: #111;
+}
+.square_button.black:hover,
+.square_button.black.hover {
+  background-color: var(--black-hover);
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.1);
+}
+
+.square_button.highlighted {
+  transition: background-color 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 0 14px rgba(201, 168, 76, 0.5);
+}
+
+.square img.chip_icon {
+  z-index: 2;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+/* ── Chip display ── */
 .chip {
   border: 1px solid #999;
   float: left;
@@ -39,69 +158,16 @@
   height: 100%;
 }
 
-.square_button {
-  border: 2px solid #ffffff;
-  float: left;
-  border-collapse: collapse;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
-  text-align: center;
-  color: white;
-  cursor: inherit;
-  background-color: green;
+/* ── Board rows ── */
+.board-row {
+  display: flex;
+}
+
+.board-row:first-child .square:first-child {
   width: 100%;
-  height: 100%;
 }
 
-.square img.chip_icon {
-  z-index: 2;
-  position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.square_button.green {
-  width: 99%;
-  background-color: transparent;
-  border-radius: 50% 50% 0 0;
-}
-
-.square_button.green.hover {
-  background-color: rgb(147, 175, 145);
-}
-
-.square_button.red {
-  background-color: rgb(222, 33, 44);
-}
-
-.square_button.red:hover {
-  background-color: rgb(238, 142, 148);
-}
-
-.square_button.red.hover {
-  background-color: rgb(238, 142, 148);
-}
-
-.square_button.black {
-  background-color: rgb(8, 8, 8);
-}
-
-.square_button.black:hover {
-  background-color: rgb(130, 130, 130);
-}
-
-.square_button.black.hover {
-  background-color: rgb(130, 130, 130);
-}
-
-
-.square_button.highlighted {
-  transition: background-color 0.3s;
-}
-
+/* ── Bottom row range buttons (2to1) ── */
 .board-row .roullete-button-container {
   position: relative;
   width: 33%;
@@ -115,24 +181,32 @@
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
 }
 
 .board-row .roullete-button-container button {
-  background: transparent;
-  color: white;
-  border: 2px solid #ffffff;
+  background: linear-gradient(180deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.05) 100%);
+  color: var(--gold-light);
+  border: 1px solid rgba(201, 168, 76, 0.5);
   float: left;
-  border-collapse: collapse;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
   line-height: 34px;
   margin-right: -1px;
   margin-top: -1px;
   text-align: center;
-  color: white;
   cursor: inherit;
   width: 100%;
   height: 100%;
+  transition: background 0.15s, box-shadow 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  letter-spacing: 0.05em;
+}
+
+.board-row .roullete-button-container button:hover {
+  background: linear-gradient(180deg, rgba(201,168,76,0.3) 0%, rgba(201,168,76,0.1) 100%);
+  box-shadow: inset 0 0 10px rgba(201,168,76,0.2);
 }
 
 .board-row .roullete-button-container:first-child .roullete-button {
@@ -143,150 +217,376 @@
   border-radius: 0 0 25% 0;
 }
 
+/* ── Right ranges (1-12, 13-24, 25-36) ── */
 .right-ranges {
   margin-top: 45px;
-
-  .roullete-button-container {
-    height: 180px;
-    position: relative;
-
-    &:first-child .roullete-button {
-      border-radius: 0 25% 0 0;
-    }
-    &:last-child .roullete-button {
-      border-radius: 0 0 25% 0;
-    }
-
-    & img {
-      top: 50%;
-      left: 50%;
-      z-index: 2;
-      position: absolute;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-
-    .roullete-button {
-      background: transparent;
-      color: white;
-      border: 2px solid #ffffff;
-      float: left;
-      border-collapse: collapse;
-      font-size: 24px;
-      font-weight: bold;
-      line-height: 34px;
-      margin-right: -1px;
-      margin-top: -1px;
-      text-align: center;
-      color: white;
-      cursor: inherit;
-      width: 100%;
-      height: 100%;
-      
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-
-      &:hover {
-        background-color: rgb(147, 175, 145);
-      }
-    }
-
-  }
 }
 
+.right-ranges .roullete-button-container {
+  height: 180px;
+  position: relative;
+}
+
+.right-ranges .roullete-button-container:first-child .roullete-button {
+  border-radius: 0 25% 0 0;
+}
+
+.right-ranges .roullete-button-container:last-child .roullete-button {
+  border-radius: 0 0 25% 0;
+}
+
+.right-ranges .roullete-button-container img {
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.right-ranges .roullete-button {
+  background: linear-gradient(90deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+  color: var(--gold-light);
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  float: left;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  line-height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  text-align: center;
+  cursor: inherit;
+  width: 100%;
+  height: 100%;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+  transition: background 0.15s, box-shadow 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.right-ranges .roullete-button:hover {
+  background: linear-gradient(90deg, rgba(201,168,76,0.28) 0%, rgba(201,168,76,0.1) 100%);
+  box-shadow: inset 0 0 12px rgba(201,168,76,0.25);
+}
+
+/* ── Left ranges (Even, Odd, Red, Black, 1-18, 19-36) ── */
 .left-ranges {
   margin-top: 45px;
-
-  .roullete-button-container {
-    height: 90px;
-    position: relative;
-
-    &:first-child .roullete-button {
-      border-radius: 25% 0 0 0;
-    }
-    &:last-child .roullete-button {
-      border-radius:  0 0 0 25%;
-    }
-
-    & img {
-      top: 50%;
-      left: 50%;
-      z-index: 2;
-      position: absolute;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-
-    .roullete-button {
-      background: transparent;
-      color: white;
-      border: 2px solid #ffffff;
-      float: left;
-      border-collapse: collapse;
-      font-size: 24px;
-      font-weight: bold;
-      line-height: 34px;
-      margin-right: -1px;
-      margin-top: -1px;
-      text-align: center;
-      color: white;
-      cursor: inherit;
-      width: 100%;
-      height: 100%;
-
-      
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-
-      &:hover {
-        background-color: rgb(147, 175, 145);
-      }
-    }
-
-
-
-  }
 }
 
-.board-row {
-  display: flex;
+/* Player card */
+.left-ranges > p {
+  margin: 0 0 4px 4px;
+  color: var(--gold-light);
+  font-size: 11px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
-.board-row:first-child .square:first-child {
+.left-ranges .roullete-button-container {
+  height: 90px;
+  position: relative;
+}
+
+.left-ranges .roullete-button-container:first-child .roullete-button {
+  border-radius: 25% 0 0 0;
+}
+
+.left-ranges .roullete-button-container:last-child .roullete-button {
+  border-radius: 0 0 0 25%;
+}
+
+.left-ranges .roullete-button-container img {
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.left-ranges .roullete-button {
+  background: linear-gradient(270deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+  color: var(--gold-light);
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  float: left;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  line-height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  text-align: center;
+  cursor: inherit;
   width: 100%;
+  height: 100%;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+  transition: background 0.15s, box-shadow 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
-.game-info {
-  margin-left: 20px;
+.left-ranges .roullete-button:hover {
+  background: linear-gradient(270deg, rgba(201,168,76,0.28) 0%, rgba(201,168,76,0.1) 100%);
+  box-shadow: inset 0 0 12px rgba(201,168,76,0.25);
+}
 
+/* ── Game info panel ── */
+.game-info {
+  margin-left: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-  button {
-    
-  }
+  position: relative;
+  z-index: 1;
+  padding: 12px 0;
 }
 
+/* ── Action buttons ── */
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttons button {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: linear-gradient(180deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.05) 100%);
+  border: 1px solid var(--gold-dark);
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,168,76,0.2);
+}
+
+.buttons button:hover {
+  background: linear-gradient(180deg, rgba(201,168,76,0.3) 0%, rgba(201,168,76,0.12) 100%);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  box-shadow: 0 2px 12px rgba(201,168,76,0.3), inset 0 1px 0 rgba(201,168,76,0.3);
+  transform: translateY(-1px);
+}
+
+.buttons button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* ── Wheel ── */
 .wheel-container {
   position: relative;
-  width: 300px; /* Размер контейнера */
+  width: 300px;
   height: 300px;
   display: flex;
   justify-content: center;
   align-items: center;
-  
-  .wheel {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 4px var(--gold-dark),
+    0 0 0 8px rgba(201,168,76,0.15),
+    0 0 40px rgba(0,0,0,0.8),
+    0 0 80px rgba(0,0,0,0.4);
+}
+
+.wheel-container .wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.wheel-container .orbiting-circle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 40% 35%, #fff 0%, #d4af37 40%, #a07820 100%);
+  border-radius: 50%;
+  transform-origin: center;
+  z-index: 2;
+  box-shadow: 0 0 6px rgba(255,220,100,0.8), 0 2px 4px rgba(0,0,0,0.6);
+}
+
+/* ── Chips tray ── */
+.chips {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+  align-self: flex-start;
+}
+
+/* ─────────────────────────────────────────
+   MOBILE  (≤ 768px)
+───────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Full page becomes a vertical scrollable column */
+  .game {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 24px;
+  }
+
+  /* ── Board section ── */
+  .game-board {
+    flex-direction: column;
+    padding: 10px 8px 0;
     width: 100%;
-    height: 100%;
+    filter: none; /* drop-shadow too heavy on mobile */
   }
-  .orbiting-circle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: white;
-    border-radius: 50%; 
-    transform-origin: center;
-    z-index: 2;
+
+  /* Board itself fills full width */
+  .board-wrapper {
+    width: 100%;
   }
+
+  /* Squares scale down to fit screen */
+  .square {
+    height: 36px;
+  }
+
+  .square_button {
+    font-size: 12px;
+  }
+
+  /* ── Left ranges move BELOW the board as a horizontal row ── */
+  .left-ranges {
+    margin-top: 0;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    order: 2; /* render after board */
+  }
+
+  /* Player info sits above the board, not inside left-ranges column */
+  .left-ranges > p {
+    display: none; /* hidden here — shown in .player-info-mobile instead */
+  }
+
+  .left-ranges .roullete-button-container {
+    flex: 1;
+    height: 48px;
+  }
+
+  /* Reset vertical writing mode — buttons are now horizontal */
+  .left-ranges .roullete-button {
+    writing-mode: horizontal-tb;
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    border-radius: 0 !important; /* override first/last child radii */
+  }
+
+  .left-ranges .roullete-button-container:first-child .roullete-button {
+    border-radius: 0 0 0 12px !important;
+  }
+
+  .left-ranges .roullete-button-container:last-child .roullete-button {
+    border-radius: 0 0 12px 0 !important;
+  }
+
+  /* ── Right ranges also move below board as a horizontal row ── */
+  .right-ranges {
+    margin-top: 0;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    order: 3;
+  }
+
+  .right-ranges .roullete-button-container {
+    flex: 1;
+    height: 48px;
+  }
+
+  .right-ranges .roullete-button {
+    writing-mode: horizontal-tb;
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    border-radius: 0 !important;
+  }
+
+  .right-ranges .roullete-button-container:first-child .roullete-button {
+    border-radius: 0 !important;
+  }
+
+  .right-ranges .roullete-button-container:last-child .roullete-button {
+    border-radius: 0 !important;
+  }
+
+  /* ── Game info panel goes below the board section ── */
+  .game-info {
+    margin-left: 0;
+    padding: 12px 8px;
+    width: 100%;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* ── Wheel shrinks to fit screen ── */
+  .wheel-container {
+    width: 220px;
+    height: 220px;
+  }
+
+  /* Ball scales down too */
+  .wheel-container .orbiting-circle {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* ── Action buttons stretch full width ── */
+  .buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .buttons button {
+    flex: 1;
+    font-size: 11px;
+    padding: 10px 8px;
+  }
+
+  /* ── Chips tray centers and wraps ── */
+  .chips {
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    align-self: stretch;
+  }
+
+  /* ── Player info shown at the top on mobile ── */
+  .player-info-mobile {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px 0;
+    color: var(--gold-light);
+    font-size: 12px;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  }
+}
+
+/* Hide mobile player info bar on desktop */
+.player-info-mobile {
+  display: none;
 }
