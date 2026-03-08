@@ -153,6 +153,9 @@ export default function Game() {
       "1-12": { type: "sequence", value: "1/12" },
       "13-24": { type: "sequence", value: "13/24" },
       "25-36": { type: "sequence", value: "25/36" },
+      "Left Column": { type: "row", value: "1" },
+      "Middle Column": { type: "row", value: "2" },
+      "Right Column": { type: "row", value: "3" },
     };
 
     if (rangeMap[key]) return { ...rangeMap[key], stake };
@@ -240,6 +243,9 @@ export default function Game() {
       "1/12": "1-12",
       "13/24": "13-24",
       "25/36": "25-36",
+      "1": "Left Column",
+      "2": "Middle Column",
+      "3": "Right Column",
     };
 
     for (const bet of bets) {
