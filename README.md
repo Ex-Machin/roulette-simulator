@@ -5,3 +5,6 @@ This is my pet project, where I tried to implement roullete.
 npm run dev
 
 right now under development 
+
+To do:
+- migrate to Angular
